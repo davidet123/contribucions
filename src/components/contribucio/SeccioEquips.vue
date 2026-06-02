@@ -125,7 +125,8 @@
           </v-btn>
         </div>
         <div class="vies-grid">
-          <div v-for="(via, vi) in instancia.vies" :key="via.id" class="via-row">
+          <template v-for="(via, vi) in instancia.vies" :key="via.id">
+            <div class="via-row">
             <span class="via-num">VIA {{ via.numero }}</span>
             <v-select
               v-model="via.direccio"
@@ -182,7 +183,20 @@
             <v-btn icon size="x-small" variant="text" color="error" @click="eliminarVia(instancia, vi)">
               <v-icon size="12">mdi-close</v-icon>
             </v-btn>
-          </div>
+            </div>
+            <div v-if="via.destiCCTId || via.destiCCTNom" class="via-notes-row">
+              <v-text-field
+                v-model="via.notes"
+                placeholder="Anotació destí CCT (ex: srt://178.249.13.70:30001)"
+                density="compact"
+                hide-details
+                variant="plain"
+                class="via-notes-field"
+                prepend-inner-icon="mdi-note-text-outline"
+                @change="emitUpdate"
+              />
+            </div>
+          </template>
         </div>
       </div>
 
@@ -305,7 +319,6 @@ function getEquipNom(instancia) {
 //   return tipus?.categoria === 'proveidor_extern'
 // }
 
-// ✅ CÓDIGO CORREGIDO (permite proveedor sin equipId)
 function esProveidor(instancia) {
   // Si tiene nombre de proveedor pero no equipId, asumir que es proveedor externo
   if (instancia.nomProveidor && !instancia.equipId) return true
@@ -484,4 +497,6 @@ function emitUpdate() {
 .vies-grid { display: flex; flex-direction: column; gap: 6px; }
 .via-row { display: flex; align-items: center; gap: 8px; }
 .via-num { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1A2E; min-width: 40px; }
+.via-notes-row { margin-top: -2px; padding-left: 48px; }
+.via-notes-field { font-size: 11px; }
 </style>

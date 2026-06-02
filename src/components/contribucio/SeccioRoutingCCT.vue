@@ -101,6 +101,18 @@
             <v-icon size="12">mdi-close</v-icon>
           </v-btn>
         </div>
+        <div v-if="via.destiCCTId || via.destiCCTNom" class="via-notes-row">
+          <v-text-field
+            v-model="via.notes"
+            placeholder="Anotació destí CCT (ex: srt://178.249.13.70:30001)"
+            density="compact"
+            hide-details
+            variant="plain"
+            class="via-notes-field"
+            prepend-inner-icon="mdi-note-text-outline"
+            @change="emitUpdate"
+          />
+        </div>
       </div>
     </div>
 
@@ -180,6 +192,7 @@ function afegirVia(bloc) {
     direccio: 'rx',
     destiCCTNom: '',
     destiCCTId: null,
+    notes: '',
   })
   emitUpdate()
 }
@@ -240,5 +253,7 @@ function emitUpdate() {
 .vies-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .vies-title { font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 .via-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.via-notes-row { margin-top: -4px; margin-bottom: 6px; padding-left: 8px; }
+.via-notes-field { font-size: 11px; }
 .font-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 </style>

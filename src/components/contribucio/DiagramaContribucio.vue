@@ -133,9 +133,10 @@ const equipsContribucio = computed(() => {
       etiqueta: via.etiqueta || '—',
       direccio: via.direccio || 'tx',
       desti: getDestiNom(via),
+      destiNotes: via.notes || '',
     }))
     if (files.length === 0) {
-      files.push({ key: 'empty', via: '', etiquetaVia: null, etiqueta: '', direccio: 'tx', desti: '' })
+      files.push({ key: 'empty', via: '', etiquetaVia: null, etiqueta: '', direccio: 'tx', desti: '', destiNotes: '' })
     }
     grups.push({
       id: instancia.id,
@@ -155,9 +156,10 @@ const equipsContribucio = computed(() => {
       etiqueta: via.etiquetaSenyal || '—',
       direccio: via.direccio || 'rx',
       desti: via.destiCCTNom || via.destiCCTId || '—',
+      destiNotes: via.notes || '',
     }))
     if (files.length === 0) {
-      files.push({ key: 'empty', via: null, etiquetaVia: null, etiqueta: '', direccio: 'rx', desti: '' })
+      files.push({ key: 'empty', via: null, etiquetaVia: null, etiqueta: '', direccio: 'rx', desti: '', destiNotes: '' })
     }
     grups.push({
       id: bloc.id,
@@ -193,6 +195,7 @@ const equipsComunicacions = computed(() => {
               : com.direccio === 'cct_a_camp' ? 'rx'
               : 'bidireccional',
       desti: com.recursCCTNom || '—',
+      destiNotes: com.notesDestiCCT || '',
     })
   }
   return grups

@@ -41,7 +41,10 @@
         class="grid-celda celda-desti" 
         :style="{ gridRow: index + 2, gridColumn: 4 }"
       >
-        <span class="desti-nom">{{ fila.desti }}</span>
+        <div class="desti-bloc">
+          <span class="desti-nom">{{ fila.desti }}</span>
+          <span v-if="fila.destiNotes" class="desti-notes">{{ fila.destiNotes }}</span>
+        </div>
       </div>
 
     </template>
@@ -189,11 +192,26 @@ const props = defineProps({
   justify-content: flex-start;
 }
 
+.desti-bloc {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  line-height: 1;
+}
+
 .desti-nom {
   font-family: 'Space Mono', monospace;
   font-size: 8.5px;
   font-weight: 700;
   color: #1A1A2E;
+  white-space: nowrap;
+}
+
+.desti-notes {
+  font-family: 'DM Mono', monospace;
+  font-size: 7px;
+  color: #6B7280;
   white-space: nowrap;
 }
 </style>

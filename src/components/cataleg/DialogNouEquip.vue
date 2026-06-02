@@ -1,7 +1,9 @@
 <template>
   <v-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="480">
     <v-card>
-      <v-card-title class="pa-6 pb-2">Nou equip al catàleg</v-card-title>
+      <v-card-title class="pa-6 pb-2">
+        {{ equipEditat ? 'Editar equip' : 'Nou equip al catàleg' }}
+      </v-card-title>
       <v-card-text>
         <v-row dense>
           <v-col cols="12">
@@ -14,7 +16,6 @@
               item-title="nom"
               item-value="id"
               label="Tipus d'equip"
-              @update:model-value="onTipusChange"
             />
           </v-col>
           <v-col cols="12">
@@ -23,9 +24,9 @@
         </v-row>
 
         <!-- Previsualització de vies -->
-        <div v-if="viesTotalsPreviw.length" class="vies-preview">
+        <div v-if="viesPreview.length" class="vies-preview">
           <div class="vies-preview-title">Vies per defecte:</div>
-          <div v-for="via in viesTotalsPreviw" :key="via.numero" class="via-preview-row">
+          <div v-for="via in viesPreview" :key="via.numero" class="via-preview-row">
             <span class="tag-tx" v-if="via.direccio === 'tx'">Tx</span>
             <span class="tag-rx" v-else-if="via.direccio === 'rx'">Rx</span>
             <span class="tag-tx" v-else>↔</span>
@@ -35,34 +36,59 @@
       </v-card-text>
       <v-card-actions class="pa-4 pt-0">
         <v-spacer />
-        <v-btn variant="text" @click="$emit('update:modelValue', false)">Cancel·lar</v-btn>
-        <v-btn color="primary" :disabled="!form.nom || !form.tipusId" @click="crear">Crear equip</v-btn>
+        <v-btn variant="text" @click="tancar">Cancel·lar</v-btn>
+        <v-btn color="primary" :disabled="!form.nom || !form.tipusId" @click="desar">
+          {{ equipEditat ? 'Desar canvis' : 'Crear equip' }}
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useCatalegStore } from '@/stores/cataleg'
 
-defineProps({ modelValue: Boolean })
-const emit = defineEmits(['update:modelValue', 'creat'])
+const props = defineProps({
+  modelValue: Boolean,
+  equipEditat: { type: Object, default: null }, // null = mode creació, objecte = mode edició
+})
+const emit = defineEmits(['update:modelValue', 'creat', 'editat'])
 const cataleg = useCatalegStore()
 
 const form = ref({ nom: '', tipusId: '', notes: '' })
 
-const viesTotalsPreviw = computed(() => {
+// Quan s'obre en mode edició, omple el formulari amb les dades de l'equip
+watch(() => props.modelValue, (obert) => {
+  if (obert && props.equipEditat) {
+    form.value = {
+      nom: props.equipEditat.nom,
+      tipusId: props.equipEditat.tipusId,
+      notes: props.equipEditat.notes || '',
+    }
+  } else if (obert && !props.equipEditat) {
+    form.value = { nom: '', tipusId: '', notes: '' }
+  }
+})
+
+const viesPreview = computed(() => {
   if (!form.value.tipusId) return []
   const tipus = cataleg.tipusEquip.find(t => t.id === form.value.tipusId)
   return tipus?.viesDefecte || []
 })
 
-function onTipusChange() { /* nothing extra needed */ }
+function desar() {
+  if (props.equipEditat) {
+    cataleg.updateEquip(props.equipEditat.id, { ...form.value })
+    emit('editat', { ...props.equipEditat, ...form.value })
+  } else {
+    const equip = cataleg.addEquip({ ...form.value })
+    emit('creat', equip)
+  }
+  tancar()
+}
 
-function crear() {
-  const equip = cataleg.addEquip({ ...form.value })
-  emit('creat', equip)
+function tancar() {
   emit('update:modelValue', false)
   form.value = { nom: '', tipusId: '', notes: '' }
 }

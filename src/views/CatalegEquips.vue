@@ -5,7 +5,7 @@
         <h1 class="page-title">Catàleg d'equips</h1>
         <p class="page-subtitle">{{ cataleg.equips.length }} equips al catàleg</p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="dialogNou = true">Nou equip</v-btn>
+      <v-btn color="primary" prepend-icon="mdi-plus" @click="obrirNou">Nou equip</v-btn>
     </div>
 
     <v-table>
@@ -15,11 +15,11 @@
           <th>Tipus</th>
           <th>Vies per defecte</th>
           <th>Notes</th>
-          <th></th>
+          <th style="width: 90px"></th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="equip in cataleg.equips" :key="equip.id">
+        <tr v-for="equip in cataleg.equips" :key="equip.id" class="fila-editable">
           <td class="font-mono font-weight-bold">{{ equip.nom }}</td>
           <td>
             <v-chip size="small" color="secondary">
@@ -37,16 +37,28 @@
           </td>
           <td class="text-caption text-grey">{{ equip.notes }}</td>
           <td>
-            <v-btn icon size="small" variant="text" color="error" @click="confirmarEliminar(equip)">
-              <v-icon size="16">mdi-delete-outline</v-icon>
-            </v-btn>
+            <div class="fila-accions">
+              <v-btn icon size="x-small" variant="text" @click="obrirEditar(equip)">
+                <v-icon size="16">mdi-pencil-outline</v-icon>
+              </v-btn>
+              <v-btn icon size="x-small" variant="text" color="error" @click="confirmarEliminar(equip)">
+                <v-icon size="16">mdi-delete-outline</v-icon>
+              </v-btn>
+            </div>
           </td>
         </tr>
       </tbody>
     </v-table>
 
-    <DialogNouEquip v-model="dialogNou" @creat="dialogNou = false" />
+    <!-- Dialog crear / editar -->
+    <DialogNouEquip
+      v-model="dialogEquip"
+      :equip-editat="equipEditat"
+      @creat="dialogEquip = false"
+      @editat="dialogEquip = false"
+    />
 
+    <!-- Dialog confirmar eliminar -->
     <v-dialog v-model="dialogEliminar" max-width="380">
       <v-card>
         <v-card-title class="pa-5 pb-2">Eliminar equip</v-card-title>
@@ -67,14 +79,46 @@ import { useCatalegStore } from '@/stores/cataleg'
 import DialogNouEquip from '@/components/cataleg/DialogNouEquip.vue'
 
 const cataleg = useCatalegStore()
-const dialogNou = ref(false)
+
+const dialogEquip = ref(false)
+const equipEditat = ref(null)
+
 const dialogEliminar = ref(false)
 const aEliminar = ref(null)
 
-function confirmarEliminar(equip) { aEliminar.value = equip; dialogEliminar.value = true }
-function ferEliminar() { cataleg.deleteEquip(aEliminar.value.id); dialogEliminar.value = false }
+function obrirNou() {
+  equipEditat.value = null
+  dialogEquip.value = true
+}
+
+function obrirEditar(equip) {
+  equipEditat.value = equip
+  dialogEquip.value = true
+}
+
+function confirmarEliminar(equip) {
+  aEliminar.value = equip
+  dialogEliminar.value = true
+}
+
+function ferEliminar() {
+  cataleg.deleteEquip(aEliminar.value.id)
+  dialogEliminar.value = false
+  aEliminar.value = null
+}
 </script>
 
 <style scoped>
 .vies-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.fila-editable .fila-accions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.fila-editable:hover .fila-accions {
+  opacity: 1;
+}
 </style>
