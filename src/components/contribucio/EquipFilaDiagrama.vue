@@ -1,11 +1,16 @@
 <template>
-  <div class="equip-grid-container">
-    
-    <div 
-      class="equip-node-bg" 
+  <div
+    class="equip-grid-container"
+    :style="{ gridTemplateColumns: `160px 8px 1fr ${temExtern ? '90px' : '0px'} 80px` }"
+  >
+
+    <!-- Fons del recuadre de l'equip (posició absoluta dins col 1) -->
+    <div
+      class="equip-node-bg"
       :style="{ gridRow: `1 / span ${equip.files.length + 1}` }"
     />
 
+    <!-- Fila 1: títol de l'equip -->
     <div class="grid-celda celda-titol-equip" style="grid-row: 1; grid-column: 1;">
       <span class="equip-nom">{{ equip.nom }}</span>
       <span v-if="equip.connexio" class="equip-connexio">{{ equip.connexio }}</span>
@@ -13,21 +18,26 @@
     <div style="grid-row: 1; grid-column: 2;"></div>
     <div style="grid-row: 1; grid-column: 3;"></div>
     <div style="grid-row: 1; grid-column: 4;"></div>
+    <div style="grid-row: 1; grid-column: 5;"></div>
 
+    <!-- Files de vies -->
     <template v-for="(fila, index) in equip.files" :key="fila.key">
-      
-      <div 
-        class="grid-celda celda-via" 
+
+      <!-- Col 1: Via -->
+      <div
+        class="grid-celda celda-via"
         :style="{ gridRow: index + 2, gridColumn: 1 }"
       >
         <span v-if="fila.etiquetaVia" class="via-text">{{ fila.etiquetaVia }}</span>
         <span v-else-if="fila.via" class="via-text">{{ fila.via }}</span>
       </div>
 
+      <!-- Col 2: espai -->
       <div :style="{ gridRow: index + 2, gridColumn: 2 }"></div>
 
-      <div 
-        class="grid-celda celda-fletxa" 
+      <!-- Col 3: Fletxa -->
+      <div
+        class="grid-celda celda-fletxa"
         :style="{ gridRow: index + 2, gridColumn: 3 }"
       >
         <div class="fletxa-linia" :class="fila.direccio">
@@ -37,9 +47,20 @@
         </div>
       </div>
 
-      <div 
-        class="grid-celda celda-desti" 
+      <!-- Col 4: Destí extern (només si temExtern) -->
+      <div
+        class="grid-celda celda-desti-extern"
         :style="{ gridRow: index + 2, gridColumn: 4 }"
+      >
+        <div v-if="fila.destiExtern" class="desti-extern-node">
+          <span class="desti-extern-nom">{{ fila.destiExtern }}</span>
+        </div>
+      </div>
+
+      <!-- Col 5: Destí CCT (zona rosa) -->
+      <div
+        class="grid-celda celda-desti"
+        :style="{ gridRow: index + 2, gridColumn: 5 }"
       >
         <div class="desti-bloc">
           <span class="desti-nom">{{ fila.desti }}</span>
@@ -53,46 +74,49 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   equip: {
     type: Object,
     required: true
   }
 })
+
+// Hi ha destí extern si alguna fila té destiExtern amb valor
+const temExtern = computed(() =>
+  props.equip.files.some(f => f.destiExtern && f.destiExtern !== '')
+)
 </script>
 
 <style scoped>
-/* Cuadrícula maestra del bloque de equipo */
 .equip-grid-container {
   display: grid;
   width: 100%;
   position: relative;
-  /* Definición estricta de las 4 columnas horizontales */
-  grid-template-columns: 160px 8px 1fr 80px;
-  /* Cada fila (tanto título como señales) mide exactamente lo mismo */
-  grid-auto-rows: 26px; 
+  grid-auto-rows: 26px;
   align-items: stretch;
 }
 
-/* El recuadro físico del equipo se dibuja como una capa absoluta en la Col 1 */
+/* Fons del recuadre de l'equip */
 .equip-node-bg {
   grid-column: 1;
   border: 1px solid #D1D5DB;
   border-radius: 4px;
   background: white;
   z-index: 1;
-  pointer-events: none; /* No interfiere con clicks */
+  pointer-events: none;
 }
 
-/* Base común para las celdas del grid */
+/* Base comú per a les cel·les */
 .grid-celda {
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  z-index: 2; /* Por encima del recuadro decorativo de fondo */
+  z-index: 2;
 }
 
-/* Celda del título (Fila 1, Columna 1) */
+/* Cel·la títol equip */
 .celda-titol-equip {
   flex-direction: column;
   align-items: flex-start;
@@ -115,7 +139,7 @@ const props = defineProps({
   font-weight: 600;
 }
 
-/* Celda de Vías (Filas siguientes, Columna 1) */
+/* Cel·la via */
 .celda-via {
   padding: 0 8px;
   justify-content: flex-end;
@@ -127,7 +151,7 @@ const props = defineProps({
   color: #9CA3AF;
 }
 
-/* Celda de Flechas y Líneas (Columna 3) */
+/* Cel·la fletxa */
 .celda-fletxa {
   padding: 0 8px;
 }
@@ -148,13 +172,8 @@ const props = defineProps({
   z-index: 0;
 }
 
-.fletxa-linia.rx::before { 
-  background: #9CA3AF; 
-}
-
-.fletxa-linia.bidireccional::before { 
-  background: #F5A623; 
-}
+.fletxa-linia.rx::before { background: #9CA3AF; }
+.fletxa-linia.bidireccional::before { background: #F5A623; }
 
 .fletxa-punta,
 .fletxa-text {
@@ -164,18 +183,9 @@ const props = defineProps({
   line-height: 1;
 }
 
-.fletxa-punta { 
-  font-size: 8px; 
-  padding: 0 1px; 
-}
-
-.fletxa-punta.esquerra { 
-  color: #9CA3AF; 
-}
-
-.fletxa-punta.dreta { 
-  color: #E8001C; 
-}
+.fletxa-punta { font-size: 8px; padding: 0 1px; }
+.fletxa-punta.esquerra { color: #9CA3AF; }
+.fletxa-punta.dreta    { color: #E8001C; }
 
 .fletxa-text {
   font-family: 'DM Mono', monospace;
@@ -186,7 +196,30 @@ const props = defineProps({
   white-space: nowrap;
 }
 
-/* Celda de Destinos (Columna 4) */
+/* Cel·la destí extern */
+.celda-desti-extern {
+  padding: 0 4px;
+  justify-content: center;
+}
+
+.desti-extern-node {
+  border: 1px solid #D1D5DB;
+  border-radius: 3px;
+  background: white;
+  padding: 2px 5px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.desti-extern-nom {
+  font-family: 'Space Mono', monospace;
+  font-size: 7.5px;
+  font-weight: 700;
+  color: #1A1A2E;
+}
+
+/* Cel·la destí CCT (zona rosa) */
 .celda-desti {
   padding: 0 6px;
   justify-content: flex-start;

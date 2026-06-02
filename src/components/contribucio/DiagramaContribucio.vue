@@ -129,14 +129,16 @@ const equipsContribucio = computed(() => {
     const files = vies.map(via => ({
       key: via.id || via.numero,
       via: 'VIA ' + via.numero,
-      etiquetaVia: null, // equips de camp no tenen etiquetaVia
+      etiquetaVia: null,
       etiqueta: via.etiqueta || '—',
       direccio: via.direccio || 'tx',
-      desti: getDestiNom(via),
+      tipusDesti: via.tipusDesti || 'cct',
+      desti: (!via.tipusDesti || via.tipusDesti === 'cct') ? getDestiNom(via) : '',
+      destiExtern: via.tipusDesti === 'extern' ? (via.destiExternNom || '—') : '',
       destiNotes: via.notes || '',
     }))
     if (files.length === 0) {
-      files.push({ key: 'empty', via: '', etiquetaVia: null, etiqueta: '', direccio: 'tx', desti: '', destiNotes: '' })
+      files.push({ key: 'empty', via: '', etiquetaVia: null, etiqueta: '', direccio: 'tx', tipusDesti: 'cct', desti: '', destiExtern: '', destiNotes: '' })
     }
     grups.push({
       id: instancia.id,
@@ -152,14 +154,16 @@ const equipsContribucio = computed(() => {
     const files = vies.map((via, i) => ({
       key: via.id || i,
       via: null,
-      etiquetaVia: via.etiquetaVia || null, // EXT 1, PGM POL... o null
+      etiquetaVia: via.etiquetaVia || null,
       etiqueta: via.etiquetaSenyal || '—',
       direccio: via.direccio || 'rx',
-      desti: via.destiCCTNom || via.destiCCTId || '—',
-      destiNotes: via.notes || '',
+      tipusDesti: via.tipusDesti || 'cct',
+      desti: (!via.tipusDesti || via.tipusDesti === 'cct') ? (via.destiCCTNom || via.destiCCTId || '—') : '',
+      destiExtern: via.tipusDesti === 'extern' ? (via.destiExternNom || '—') : '',
+      destiNotes: '',
     }))
     if (files.length === 0) {
-      files.push({ key: 'empty', via: null, etiquetaVia: null, etiqueta: '', direccio: 'rx', desti: '', destiNotes: '' })
+      files.push({ key: 'empty', via: null, etiquetaVia: null, etiqueta: '', direccio: 'rx', tipusDesti: 'cct', desti: '', destiExtern: '', destiNotes: '' })
     }
     grups.push({
       id: bloc.id,

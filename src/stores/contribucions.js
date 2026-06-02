@@ -36,8 +36,10 @@ function novaViaEquip(numero = 1) {
     numero,
     direccio: 'tx',
     etiqueta: '',
+    tipusDesti: 'cct',       // 'cct' | 'extern'
     destiCCTId: null,
     destiCCTNom: '',
+    destiExternNom: '',      // nom lliure quan tipusDesti === 'extern'
     urlExterna: '',
     notes: '',
   }
@@ -92,8 +94,10 @@ function novaViaCCT() {
     etiquetaVia: '',     // 'EXT 1', 'PGM POL'... o buit si no té nomenclatura
     etiquetaSenyal: '',  // 'POOL', 'PGM E. POLIVALENT'...
     direccio: 'rx',      // rx | tx
+    tipusDesti: 'cct',   // 'cct' | 'extern'
     destiCCTNom: '',
     destiCCTId: null,
+    destiExternNom: '',  // nom lliure quan tipusDesti === 'extern'
   }
 }
 

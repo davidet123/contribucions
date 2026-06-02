@@ -145,33 +145,60 @@
               hide-details
               @change="emitUpdate"
             />
-            <v-autocomplete
-              v-model="via.destiCCTId"
-              :items="destinsCCTOpcions"
-              item-title="nom"
-              item-value="id"
+            <!-- Selector tipus destí -->
+            <v-btn-toggle
+              v-model="via.tipusDesti"
               density="compact"
-              hide-details
-              placeholder="Destí CCT"
-              clearable
-              @update:model-value="onDestiChange(via, $event)"
+              mandatory
+              rounded="lg"
+              style="height:32px"
+              @update:model-value="onTipusDestiChange(via)"
             >
-              <template #append-item>
-                <v-divider />
-                <v-list-item @click="obrirDialogNouDesti(via)" class="mt-1">
-                  <template #prepend><v-icon size="16" color="primary">mdi-plus</v-icon></template>
-                  <v-list-item-title class="text-primary text-caption">Nou destí CCT</v-list-item-title>
-                </v-list-item>
-              </template>
-            </v-autocomplete>
-            <v-text-field
-              v-if="!via.destiCCTId"
-              v-model="via.destiCCTNom"
-              placeholder="O escriu nom..."
-              density="compact"
-              hide-details
-              @change="emitUpdate"
-            />
+              <v-btn value="cct" size="x-small">CCT</v-btn>
+              <v-btn value="extern" size="x-small">Extern</v-btn>
+            </v-btn-toggle>
+
+            <!-- Destí CCT -->
+            <template v-if="!via.tipusDesti || via.tipusDesti === 'cct'">
+              <v-autocomplete
+                v-model="via.destiCCTId"
+                :items="destinsCCTOpcions"
+                item-title="nom"
+                item-value="id"
+                density="compact"
+                hide-details
+                placeholder="Destí CCT"
+                clearable
+                @update:model-value="onDestiChange(via, $event)"
+              >
+                <template #append-item>
+                  <v-divider />
+                  <v-list-item @click="obrirDialogNouDesti(via)" class="mt-1">
+                    <template #prepend><v-icon size="16" color="primary">mdi-plus</v-icon></template>
+                    <v-list-item-title class="text-primary text-caption">Nou destí CCT</v-list-item-title>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
+              <v-text-field
+                v-if="!via.destiCCTId"
+                v-model="via.destiCCTNom"
+                placeholder="O escriu nom..."
+                density="compact"
+                hide-details
+                @change="emitUpdate"
+              />
+            </template>
+
+            <!-- Destí extern -->
+            <template v-else>
+              <v-text-field
+                v-model="via.destiExternNom"
+                placeholder="MITJANS IN SITU, MOTXILLES 1 a 9..."
+                density="compact"
+                hide-details
+                @change="emitUpdate"
+              />
+            </template>
             <v-text-field
               v-if="['srt'].includes(instancia.tecnologia)"
               v-model="via.urlExterna"
@@ -401,6 +428,17 @@ function onEquipChange(instancia, equipId) {
       // Para otros equipos, mantener tecnología si existe
       if (tecnologiaAnterior) instancia.tecnologia = tecnologiaAnterior
     }
+  }
+  emitUpdate()
+}
+
+function onTipusDestiChange(via) {
+  // Neteja els camps de l'altre tipus quan es canvia
+  if (via.tipusDesti === 'cct') {
+    via.destiExternNom = ''
+  } else {
+    via.destiCCTId = null
+    via.destiCCTNom = ''
   }
   emitUpdate()
 }
