@@ -100,18 +100,18 @@
           <v-btn icon size="x-small" variant="text" color="error" @click="eliminarVia(bloc, vi)">
             <v-icon size="12">mdi-close</v-icon>
           </v-btn>
-        </div>
-        <div v-if="via.destiCCTId || via.destiCCTNom" class="via-notes-row">
-          <v-text-field
-            v-model="via.notes"
-            placeholder="Anotació destí CCT (ex: srt://178.249.13.70:30001)"
-            density="compact"
-            hide-details
-            variant="plain"
-            class="via-notes-field"
-            prepend-inner-icon="mdi-note-text-outline"
-            @change="emitUpdate"
-          />
+          <div v-if="via.destiCCTId || via.destiCCTNom" class="via-notes-row">
+            <v-text-field
+              v-model="via.notes"
+              placeholder="Anotació destí CCT (ex: srt://178.249.13.70:30001)"
+              density="compact"
+              hide-details
+              variant="plain"
+              class="via-notes-field"
+              prepend-inner-icon="mdi-note-text-outline"
+              @change="emitUpdate"
+            />
+          </div>
         </div>
       </div>
     </div>
