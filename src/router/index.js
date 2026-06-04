@@ -5,6 +5,7 @@ const routes = [
     path: '/',
     redirect: '/contribucions'
   },
+  // ========== CONTRIBUCIONS ==========
   {
     path: '/contribucions',
     name: 'Contribucions',
@@ -23,6 +24,8 @@ const routes = [
     component: () => import('@/views/ContribucioEditor.vue'),
     meta: { title: 'Editar contribució' }
   },
+
+  // ========== CATÀLEG ==========
   {
     path: '/cataleg/equips',
     name: 'CatalegEquips',
@@ -40,6 +43,26 @@ const routes = [
     name: 'CatalegCCT',
     component: () => import('@/views/CatalegCCT.vue'),
     meta: { title: 'Recursos CCT' }
+  },
+
+  // ========== FTTH ==========
+  {
+    path: '/ftth',
+    name: 'FTTHLlista',
+    component: () => import('@/views/FTTHLlista.vue'),
+    meta: { title: 'Localitzacions FTTH' }
+  },
+  {
+    path: '/ftth/nova',
+    name: 'NovaFTTH',
+    component: () => import('@/views/FTTHDetall.vue'),
+    meta: { title: 'Nova localització FTTH' }
+  },
+  {
+    path: '/ftth/:id',
+    name: 'EditarFTTH',
+    component: () => import('@/views/FTTHDetall.vue'),
+    meta: { title: 'Editar localització FTTH' }
   },
 ]
 

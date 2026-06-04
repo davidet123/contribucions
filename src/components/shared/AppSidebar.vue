@@ -3,16 +3,11 @@
     <!-- Logo -->
     <div class="sidebar-logo">
       <img src="@/assets/images/a-punt-media-logo-blanco.png" class="logo-image" alt="À Punt Mèdia" />
-      <!-- <div class="logo-mark">à</div>
-      <div class="logo-text">
-        <span class="logo-main">MÈDIA</span>
-        <span class="logo-sub">Tràfic Contribució</span>
-      </div> -->
     </div>
 
     <div class="sidebar-divider" />
 
-    <!-- Nav principal -->
+    <!-- Nav principal: Contribucions -->
     <div class="sidebar-section-label">Contribucions</div>
     <router-link to="/contribucions" class="nav-item" :class="{ active: $route.path === '/contribucions' }">
       <v-icon size="18">mdi-format-list-bulleted</v-icon>
@@ -21,6 +16,19 @@
     <router-link to="/contribucions/nova" class="nav-item" :class="{ active: $route.path === '/contribucions/nova' }">
       <v-icon size="18">mdi-plus-circle-outline</v-icon>
       Nova contribució
+    </router-link>
+
+    <div class="sidebar-divider" />
+
+    <!-- Nav: FTTH -->
+    <div class="sidebar-section-label">Localitzacions FTTH</div>
+    <router-link to="/ftth" class="nav-item" :class="{ active: $route.path === '/ftth' }">
+      <v-icon size="18">mdi-web</v-icon>
+      Totes les FTTH
+    </router-link>
+    <router-link to="/ftth/nova" class="nav-item" :class="{ active: $route.path === '/ftth/nova' }">
+      <v-icon size="18">mdi-plus-circle-outline</v-icon>
+      Nova FTTH
     </router-link>
 
     <div class="sidebar-divider" />
