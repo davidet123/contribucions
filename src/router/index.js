@@ -64,6 +64,26 @@ const routes = [
     component: () => import('@/views/FTTHDetall.vue'),
     meta: { title: 'Editar localització FTTH' }
   },
+
+  // ========== LOCALITZACIÓ ==========
+  {
+    path: '/localitzacio',
+    name: 'LocalitzacioLlista',
+    component: () => import('@/views/LocalitzacioLlista.vue'),
+    meta: { title: 'Localitzacions' }
+  },
+  {
+    path: '/localitzacio/nova',
+    name: 'NovaLocalitzacio',
+    component: () => import('@/views/LocalitzacioDetall.vue'),
+    meta: { title: 'Nova localització' }
+  },
+  {
+    path: '/localitzacio/:id',
+    name: 'EditarLocalitzacio',
+    component: () => import('@/views/LocalitzacioDetall.vue'),
+    meta: { title: 'Editar localització' }
+  },
 ]
 
 const router = createRouter({

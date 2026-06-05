@@ -12,7 +12,7 @@
         </div>
       </div>
       <div class="header-actions">
-        <v-btn color="primary" prepend-icon="mdi-content-save-outline" @click="guardar">
+        <v-btn color="primary" prepend-icon="mdi-content-save-outline" @click="guardar" size="small">
           Guardar
         </v-btn>
       </div>
@@ -54,7 +54,7 @@
       <div class="bloc-card">
         <div class="bloc-card-title">Connexió i instal·lador</div>
         <v-row dense>
-          <v-col cols="12" md="4">
+          <v-col cols="12" sm="8" md="4">
             <v-text-field
               v-model="localitzacio.ip"
               label="IP"
@@ -62,8 +62,8 @@
               readonly
             />
           </v-col>
-          <v-col cols="12" md="2">
-            <v-btn color="secondary" size="small" @click="detectarIP" :loading="detectantIP">
+          <v-col cols="12" sm="4" md="2" class="d-flex align-center">
+            <v-btn color="secondary" size="small" @click="detectarIP" :loading="detectantIP" block>
               Detectar IP
             </v-btn>
           </v-col>
@@ -82,8 +82,9 @@
                 placeholder="Selecciona instal·lador"
                 readonly
                 density="compact"
+                hide-details
               />
-              <v-btn size="small" variant="outlined" @click="obrirDialogInstalador">
+              <v-btn size="small" variant="outlined" @click="obrirDialogInstalador" class="flex-shrink-0">
                 <v-icon size="16">mdi-account-hard-hat-outline</v-icon>
               </v-btn>
               <v-btn
@@ -92,6 +93,7 @@
                 variant="text"
                 color="error"
                 @click="netejarInstalador"
+                class="flex-shrink-0"
               >
                 <v-icon size="14">mdi-close</v-icon>
               </v-btn>
@@ -272,20 +274,31 @@ function guardar() {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 28px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .header-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.header-left > div {
+  min-width: 0;
 }
 
 .page-title {
   font-family: 'Space Mono', monospace;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: #1A1A2E;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .page-subtitle {
@@ -297,6 +310,7 @@ function guardar() {
 .header-actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .form-container {
@@ -313,5 +327,17 @@ function guardar() {
 
 .instalador-row .v-text-field {
   flex: 1;
+  min-width: 0;
+}
+
+/* Responsive mòbil */
+@media (max-width: 767px) {
+  .page-wrapper {
+    padding: 20px 16px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
 }
 </style>

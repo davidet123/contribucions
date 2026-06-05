@@ -1,5 +1,5 @@
 <template>
-  <nav class="app-sidebar">
+  <nav class="app-sidebar" :class="{ 'sidebar-open': drawerOpen }">
     <!-- Logo -->
     <div class="sidebar-logo">
       <img src="@/assets/images/a-punt-media-logo-blanco.png" class="logo-image" alt="À Punt Mèdia" />
@@ -9,11 +9,11 @@
 
     <!-- Nav principal: Contribucions -->
     <div class="sidebar-section-label">Contribucions</div>
-    <router-link to="/contribucions" class="nav-item" :class="{ active: $route.path === '/contribucions' }">
+    <router-link to="/contribucions" class="nav-item" :class="{ active: $route.path === '/contribucions' }" @click="tancarDrawer">
       <v-icon size="18">mdi-format-list-bulleted</v-icon>
       Totes les contribucions
     </router-link>
-    <router-link to="/contribucions/nova" class="nav-item" :class="{ active: $route.path === '/contribucions/nova' }">
+    <router-link to="/contribucions/nova" class="nav-item" :class="{ active: $route.path === '/contribucions/nova' }" @click="tancarDrawer">
       <v-icon size="18">mdi-plus-circle-outline</v-icon>
       Nova contribució
     </router-link>
@@ -22,28 +22,51 @@
 
     <!-- Nav: FTTH -->
     <div class="sidebar-section-label">Localitzacions FTTH</div>
-    <router-link to="/ftth" class="nav-item" :class="{ active: $route.path === '/ftth' }">
+    <router-link to="/ftth" class="nav-item" :class="{ active: $route.path === '/ftth' }" @click="tancarDrawer">
       <v-icon size="18">mdi-web</v-icon>
       Totes les FTTH
     </router-link>
-    <router-link to="/ftth/nova" class="nav-item" :class="{ active: $route.path === '/ftth/nova' }">
+    <router-link to="/ftth/nova" class="nav-item" :class="{ active: $route.path === '/ftth/nova' }" @click="tancarDrawer">
       <v-icon size="18">mdi-plus-circle-outline</v-icon>
       Nova FTTH
     </router-link>
 
     <div class="sidebar-divider" />
 
+    <!-- Nav: Localització -->
+    <div class="sidebar-section-label">Localització</div>
+    <router-link
+      to="/localitzacio"
+      class="nav-item"
+      :class="{ active: $route.path === '/localitzacio' }"
+      @click="tancarDrawer"
+    >
+      <v-icon size="18">mdi-map-marker-multiple-outline</v-icon>
+      Totes les localitzacions
+    </router-link>
+    <router-link
+      to="/localitzacio/nova"
+      class="nav-item"
+      :class="{ active: $route.path === '/localitzacio/nova' }"
+      @click="tancarDrawer"
+    >
+      <v-icon size="18">mdi-plus-circle-outline</v-icon>
+      Nova localització
+    </router-link>
+
+    <div class="sidebar-divider" />
+
     <!-- Catàleg -->
     <div class="sidebar-section-label">Catàleg</div>
-    <router-link to="/cataleg/equips" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/equips') }">
+    <router-link to="/cataleg/equips" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/equips') }" @click="tancarDrawer">
       <v-icon size="18">mdi-server</v-icon>
       Equips
     </router-link>
-    <router-link to="/cataleg/tipus-equip" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/tipus-equip') }">
+    <router-link to="/cataleg/tipus-equip" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/tipus-equip') }" @click="tancarDrawer">
       <v-icon size="18">mdi-tag-multiple-outline</v-icon>
       Tipus d'equip
     </router-link>
-    <router-link to="/cataleg/cct" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/cct') }">
+    <router-link to="/cataleg/cct" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/cct') }" @click="tancarDrawer">
       <v-icon size="18">mdi-television-play</v-icon>
       Recursos CCT
     </router-link>
@@ -60,7 +83,18 @@
 
 <script setup>
 import { useRoute } from 'vue-router'
+
 const $route = useRoute()
+
+const props = defineProps({
+  drawerOpen: { type: Boolean, default: false },
+})
+
+const emit = defineEmits(['tancar'])
+
+function tancarDrawer() {
+  emit('tancar')
+}
 </script>
 
 <style scoped>
@@ -69,11 +103,14 @@ const $route = useRoute()
   min-height: 100vh;
   background: #1A1A2E;
   position: fixed;
-  left: 0; top: 0;
+  left: 0;
+  top: 0;
   display: flex;
   flex-direction: column;
-  z-index: 100;
+  z-index: 300;
   border-right: 1px solid rgba(255,255,255,0.06);
+  /* Transició per a mòbil */
+  transition: transform 0.25s ease;
 }
 
 .sidebar-logo {
@@ -83,46 +120,11 @@ const $route = useRoute()
   padding: 24px 20px 20px;
 }
 
-.logo-mark {
-  width: 40px;
-  height: 40px;
-  background: #E8001C;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Space Mono', monospace;
-  font-size: 20px;
-  font-weight: 700;
-  color: white;
-  flex-shrink: 0;
-}
 .logo-image {
   width: 80%;
   object-fit: contain;
   border-radius: 6px;
   flex-shrink: 0;
-}
-
-.logo-text {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.logo-main {
-  font-family: 'Space Mono', monospace;
-  font-size: 14px;
-  font-weight: 700;
-  color: white;
-  letter-spacing: 0.05em;
-}
-
-.logo-sub {
-  font-size: 10px;
-  color: rgba(255,255,255,0.4);
-  font-family: 'DM Sans', sans-serif;
-  letter-spacing: 0.03em;
 }
 
 .sidebar-divider {
@@ -141,6 +143,33 @@ const $route = useRoute()
   padding: 12px 20px 4px;
 }
 
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  border-radius: 0;
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.9);
+}
+
+.nav-item.active {
+  background: rgba(232,0,28,0.15);
+  color: #fff;
+  border-left-color: #E8001C;
+}
+
 .sidebar-spacer {
   flex: 1;
 }
@@ -154,5 +183,17 @@ const $route = useRoute()
   font-size: 11px;
   color: rgba(255,255,255,0.2);
   font-family: 'DM Mono', monospace;
+}
+
+/* En mòbil, el sidebar és ocult per defecte */
+@media (max-width: 767px) {
+  .app-sidebar {
+    transform: translateX(-100%);
+    top: 0;
+  }
+
+  .app-sidebar.sidebar-open {
+    transform: translateX(0);
+  }
 }
 </style>

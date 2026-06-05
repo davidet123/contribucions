@@ -69,8 +69,8 @@
       <div class="historial-title">Historial de tests</div>
       <div v-for="r in historial" :key="r.id" class="historial-row">
         <span class="h-date">{{ formatData(r.date) }}</span>
-        <span class="h-val"><v-icon size="11">mdi-arrow-down</v-icon> {{ r.download.toFixed(1) }} Mbps</span>
-        <span class="h-val"><v-icon size="11">mdi-arrow-up</v-icon> {{ r.upload.toFixed(1) }} Mbps</span>
+        <span class="h-val"><v-icon size="11">mdi-arrow-down</v-icon> {{ r.download.toFixed(1) }}</span>
+        <span class="h-val"><v-icon size="11">mdi-arrow-up</v-icon> {{ r.upload.toFixed(1) }}</span>
         <span class="h-val"><v-icon size="11">mdi-timer-outline</v-icon> {{ r.ping }} ms</span>
       </div>
     </div>
@@ -87,14 +87,13 @@ const props = defineProps({
 
 const emit = defineEmits(['guardar'])
 
-// Usamos un archivo de 100MB de Cloudflare para asegurar flujo continuo durante el test por tiempo
 const DL_URL = 'https://speed.cloudflare.com/__down?bytes=100000000'
 const UL_URL = 'https://speed.cloudflare.com/__up'
 const PING_URL = 'https://speed.cloudflare.com/__down?bytes=1'
 
-const estat = ref('idle')   // idle | ping | download | upload | done | error
+const estat = ref('idle')
 const cancelat = ref(false)
-let abortController = null  // Para poder cancelar los streams inmediatamente al pulsar "Cancelar"
+let abortController = null
 
 const resultats = ref({ download: null, upload: null, ping: null })
 
@@ -111,7 +110,6 @@ async function iniciarTest() {
   abortController = new AbortController()
 
   try {
-    // ── PING ──────────────────────────────────────────────────────────────
     const pings = []
     for (let i = 0; i < 5; i++) {
       if (cancelat.value) return
@@ -123,69 +121,73 @@ async function iniciarTest() {
 
     if (cancelat.value) return
 
-    // ── DOWNLOAD (Estilo Google: Tiempo fijo + Chunks) ─────────────────────
     estat.value = 'download'
-    
     const dlResponse = await fetch(DL_URL, { cache: 'no-store', signal: abortController.signal })
     const reader = dlResponse.body.getReader()
-    
     const tStartDl = performance.now()
     let bytesDescargados = 0
-    const maxDuracionDl = 7000 // Duración máxima de 7 segundos
+    const maxDuracionDl = 7000
 
     while (true) {
       if (cancelat.value) return
-      
       const { done, value } = await reader.read()
       const tActual = performance.now() - tStartDl
-      
       if (done || tActual >= maxDuracionDl) {
-        await reader.cancel() // Detiene la descarga en la red de forma inmediata
+        await reader.cancel()
         break
       }
-
       bytesDescargados += value.length
-      // Bits / segundos / 1,000,000 = Mbps
       resultats.value.download = (bytesDescargados * 8) / (tActual / 1000) / 1000000
     }
 
     if (cancelat.value) return
 
-    // ── UPLOAD (Estilo Google: Tiempo fijo + Envío por Chunks) ──────────────
     estat.value = 'upload'
-
-    // Usamos 1 MB por bloque (1024 * 1024). Es seguro para la memoria 
-    // y evita el cuello de botella de la latencia HTTP.
-    const chunkBytes = 1024 * 1024 
+    const chunkBytes = 8 * 1024 * 1024
     const uploadData = new Uint8Array(chunkBytes)
-    
-    // Llenamos el megabyte usando un bucle interno seguro para crypto
     const cryptoChunk = 65536
     for (let offset = 0; offset < chunkBytes; offset += cryptoChunk) {
       const view = new Uint8Array(uploadData.buffer, offset, cryptoChunk)
       crypto.getRandomValues(view)
     }
-
     const blob = new Blob([uploadData])
+
     const tStartUl = performance.now()
     let bytesSubidos = 0
-    const maxDuracionUl = 7000 
+    const maxDuracionUl = 7000
+    const CONCURRENCIA = 4
+    let ultimRender = 0
 
-    while (true) {
-      if (cancelat.value) return
-      const tActual = performance.now() - tStartUl
-      if (tActual >= maxDuracionUl) break
+    async function lanzarHiloDeSubida() {
+      while (!cancelat.value && (performance.now() - tStartUl) < maxDuracionUl) {
+        try {
+          await fetch(UL_URL, {
+            method: 'POST',
+            body: blob,
+            cache: 'no-store',
+            signal: abortController.signal
+          })
+          bytesSubidos += chunkBytes
+          const tActual = performance.now() - tStartUl
+          if (tActual > 0 && tActual - ultimRender > 150) {
+            resultats.value.upload = (bytesSubidos * 8) / (tActual / 1000) / 1000000
+            ultimRender = tActual
+          }
+        } catch (err) {
+          break
+        }
+      }
+    }
 
-      // Enviamos 1 MB entero en cada petición
-      await fetch(UL_URL, { 
-        method: 'POST', 
-        body: blob, 
-        cache: 'no-store', 
-        signal: abortController.signal 
-      })
+    const hilos = []
+    for (let i = 0; i < CONCURRENCIA; i++) {
+      hilos.push(lanzarHiloDeSubida())
+    }
+    await Promise.all(hilos)
 
-      bytesSubidos += chunkBytes
-      resultats.value.upload = (bytesSubidos * 8) / (tActual / 1000) / 1000000
+    const tTotal = performance.now() - tStartUl
+    if (tTotal > 0) {
+      resultats.value.upload = (bytesSubidos * 8) / (tTotal / 1000) / 1000000
     }
 
     estat.value = 'done'
@@ -199,9 +201,7 @@ async function iniciarTest() {
 
 function cancelar() {
   cancelat.value = true
-  if (abortController) {
-    abortController.abort() // Corta de raíz las descargas/subidas pendientes HTTP
-  }
+  if (abortController) abortController.abort()
   estat.value = 'idle'
   resultats.value = { download: null, upload: null, ping: null }
 }
@@ -222,7 +222,6 @@ function formatData(iso) {
 </script>
 
 <style scoped>
-/* Tus estilos se mantienen exactamente igual */
 .speedtest-wrap {
   display: flex;
   flex-direction: column;
@@ -239,16 +238,17 @@ function formatData(iso) {
   background: #F8FAFC;
   border: 1px solid #E5E7EB;
   border-radius: 10px;
-  padding: 14px 12px 10px;
+  padding: 14px 8px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   transition: border-color 0.2s;
+  min-width: 0;
 }
 
 .meter-label {
-  font-size: 10px;
+  font-size: 9px;
   font-family: 'Space Mono', monospace;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -257,7 +257,7 @@ function formatData(iso) {
 
 .meter-value {
   font-family: 'Space Mono', monospace;
-  font-size: 26px;
+  font-size: clamp(18px, 4vw, 26px);
   font-weight: 700;
   color: #1A1A2E;
   line-height: 1;
@@ -269,7 +269,7 @@ function formatData(iso) {
 }
 
 .meter-unit {
-  font-size: 10px;
+  font-size: 9px;
   color: #9CA3AF;
   font-family: 'DM Mono', monospace;
 }
@@ -297,6 +297,7 @@ function formatData(iso) {
 .speed-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .historial {
@@ -316,16 +317,18 @@ function formatData(iso) {
 .historial-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   padding: 5px 0;
   border-bottom: 1px solid #F9FAFB;
   font-size: 11px;
+  flex-wrap: wrap;
 }
 
 .h-date {
   color: #6B7280;
   font-family: 'DM Mono', monospace;
-  min-width: 100px;
+  min-width: 90px;
+  flex-shrink: 0;
 }
 
 .h-val {
@@ -333,6 +336,6 @@ function formatData(iso) {
   display: flex;
   align-items: center;
   gap: 2px;
-  min-width: 80px;
+  min-width: 65px;
 }
 </style>

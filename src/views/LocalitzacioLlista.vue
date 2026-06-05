@@ -3,10 +3,13 @@
     <!-- Header -->
     <div class="page-header">
       <div>
-        <h1 class="page-title">Localitzacions FTTH</h1>
-        <p class="page-subtitle">{{ localitzacionsOrdenades.length }} localitzac{{ localitzacionsOrdenades.length !== 1 ? 'ions' : 'ió' }}</p>
+        <h1 class="page-title">Localitzacions</h1>
+        <p class="page-subtitle">
+          {{ localitzacionsOrdenades.length }}
+          {{ localitzacionsOrdenades.length !== 1 ? 'localitzacions' : 'localització' }}
+        </p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/ftth/nova')" size="small">
+      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/localitzacio/nova')" size="small">
         Nova localització
       </v-btn>
     </div>
@@ -22,19 +25,14 @@
         class="filter-search"
         bg-color="white"
       />
-      <v-chip-group v-model="filtreTipus" mandatory class="filter-chips">
-        <v-chip :value="null" filter>Tot</v-chip>
-        <v-chip value="permanent" filter>Permanent</v-chip>
-        <v-chip value="ocasional" filter>Ocasional</v-chip>
-      </v-chip-group>
     </div>
 
     <!-- Empty state -->
     <div v-if="llistaFiltrada.length === 0" class="empty-state">
-      <v-icon size="56" color="grey-lighten-2">mdi-fiber-optical</v-icon>
-      <p class="empty-title">Cap localització FTTH</p>
+      <v-icon size="56" color="grey-lighten-2">mdi-map-marker-multiple-outline</v-icon>
+      <p class="empty-title">Cap localització</p>
       <p class="empty-sub">Crea la primera localització per començar</p>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/ftth/nova')">
+      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/localitzacio/nova')">
         Nova localització
       </v-btn>
     </div>
@@ -45,25 +43,43 @@
         v-for="loc in llistaFiltrada"
         :key="loc.id"
         class="ftth-card"
-        @click="$router.push('/ftth/' + loc.id)"
+        @click="$router.push('/localitzacio/' + loc.id)"
       >
         <div class="card-header">
           <span class="card-title">{{ loc.nom || 'Sense nom' }}</span>
-          <v-chip :color="loc.tipus === 'permanent' ? 'success' : 'warning'" size="x-small">
-            {{ loc.tipus === 'permanent' ? 'Permanent' : 'Ocasional' }}
-          </v-chip>
+          <div class="card-chips">
+            <v-chip
+              v-if="loc.transportSenyal?.length"
+              size="x-small"
+              color="info"
+              variant="tonal"
+            >
+              {{ loc.transportSenyal.length }} transport{{ loc.transportSenyal.length !== 1 ? 's' : '' }}
+            </v-chip>
+          </div>
         </div>
         <p v-if="loc.adreca" class="card-adreca">
           <v-icon size="12">mdi-map-marker-outline</v-icon> {{ loc.adreca }}
         </p>
         <div class="card-meta">
-          <span v-if="loc.ip"><v-icon size="12">mdi-network</v-icon> {{ loc.ip }}</span>
-          <span v-if="loc.telefonFixe"><v-icon size="12">mdi-phone-outline</v-icon> {{ loc.telefonFixe }}</span>
-          <span v-if="getInstaladorNom(loc.instaladorId)"><v-icon size="12">mdi-account-hard-hat</v-icon> {{ getInstaladorNom(loc.instaladorId) }}</span>
+          <span v-if="loc.contactes?.length">
+            <v-icon size="12">mdi-account-multiple-outline</v-icon>
+            {{ loc.contactes.length }} contacte{{ loc.contactes.length !== 1 ? 's' : '' }}
+          </span>
+          <span v-if="loc.material?.length">
+            <v-icon size="12">mdi-package-variant-closed</v-icon>
+            {{ loc.material.length }} element{{ loc.material.length !== 1 ? 's' : '' }}
+          </span>
+          <span v-if="loc.produccio">
+            <v-icon size="12">mdi-video-outline</v-icon>
+            {{ loc.produccio }}
+          </span>
         </div>
         <div class="card-stats">
-          <span><v-icon size="10">mdi-speedometer</v-icon> {{ loc.speedResults?.length || 0 }} tests</span>
           <span><v-icon size="10">mdi-camera</v-icon> {{ loc.fotos?.length || 0 }} fotos</span>
+          <span v-if="loc.senyalsPrevistes">
+            <v-icon size="10">mdi-signal</v-icon> Senyals definides
+          </span>
         </div>
         <div class="card-updated">
           <v-icon size="11">mdi-clock-edit-outline</v-icon>
@@ -76,23 +92,17 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useFtthStore } from '@/stores/ftth'
+import { useLocalitzacioStore } from '@/stores/localitzacio'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 
-const router = useRouter()
-const store = useFtthStore()
-const { localitzacionsOrdenades, instaladors } = storeToRefs(store)
+const store = useLocalitzacioStore()
+const { localitzacionsOrdenades } = storeToRefs(store)
 
 const cerca = ref('')
-const filtreTipus = ref(null)
 
 const llistaFiltrada = computed(() => {
   let llista = localitzacionsOrdenades.value
-  if (filtreTipus.value) {
-    llista = llista.filter(l => l.tipus === filtreTipus.value)
-  }
   if (cerca.value) {
     const q = cerca.value.toLowerCase()
     llista = llista.filter(l =>
@@ -102,12 +112,6 @@ const llistaFiltrada = computed(() => {
   }
   return llista
 })
-
-function getInstaladorNom(id) {
-  if (!id) return null
-  const inst = instaladors.value.find(i => i.id === id)
-  return inst?.nom || null
-}
 
 function formatData(iso) {
   return dayjs(iso).format('DD/MM/YY HH:mm')
@@ -145,7 +149,6 @@ function formatData(iso) {
 .filter-bar {
   margin-bottom: 24px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
@@ -155,10 +158,6 @@ function formatData(iso) {
   max-width: 360px;
   flex: 1;
   min-width: 160px;
-}
-
-.filter-chips {
-  flex-shrink: 0;
 }
 
 .empty-state {
@@ -222,6 +221,12 @@ function formatData(iso) {
   color: #1A1A2E;
 }
 
+.card-chips {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .card-adreca {
   font-size: 12px;
   color: #6B7280;
@@ -268,7 +273,6 @@ function formatData(iso) {
   margin-top: 4px;
 }
 
-/* Responsive mòbil */
 @media (max-width: 767px) {
   .page-wrapper {
     padding: 20px 16px;
