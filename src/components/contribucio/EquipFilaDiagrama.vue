@@ -15,8 +15,11 @@
       <span class="equip-nom">{{ equip.nom }}</span>
       <span v-if="equip.connexio" class="equip-connexio">{{ equip.connexio }}</span>
     </div>
+    <!-- Logo del grup (si n'hi ha) -->
     <div style="grid-row: 1; grid-column: 2;"></div>
-    <div style="grid-row: 1; grid-column: 3;"></div>
+    <div style="grid-row: 1; grid-column: 3;">
+      <img v-if="logoSrc" :src="logoSrc" class="grup-logo-diagrama" />
+    </div>
     <div style="grid-row: 1; grid-column: 4;"></div>
     <div style="grid-row: 1; grid-column: 5;"></div>
 
@@ -75,18 +78,22 @@
 
 <script setup>
 import { computed } from 'vue'
+import { imageStorage } from '@/utils/storage'
 
 const props = defineProps({
-  equip: {
-    type: Object,
-    required: true
-  }
+  equip: { type: Object, required: true },
+  franges: { type: Array, default: () => [] },
 })
 
 // Hi ha destí extern si alguna fila té destiExtern amb valor
 const temExtern = computed(() =>
   props.equip.files.some(f => f.destiExtern && f.destiExtern !== '')
 )
+
+const logoSrc = computed(() => {
+  if (!props.equip.logoId) return null
+  return imageStorage.get(props.equip.logoId)
+})
 </script>
 
 <style scoped>
@@ -96,6 +103,12 @@ const temExtern = computed(() =>
   position: relative;
   grid-auto-rows: 26px;
   align-items: stretch;
+}
+
+.grup-logo-diagrama {
+  height: 20px;
+  max-width: 80px;
+  object-fit: contain;
 }
 
 /* Fons del recuadre de l'equip */

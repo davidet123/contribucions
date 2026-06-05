@@ -101,16 +101,24 @@ function novaViaCCT() {
   }
 }
 
-function novaComunicacio() {
+function nouGrupComunicacio() {
   return {
     id: uuidv4(),
-    extremCampNom: '',
-    recursCamp: '',
-    recursCCTId: null,
-    recursCCTNom: '',
-    ubicacioCCT: '',
-    funcio: '',
-    direccio: 'bidireccional',
+    nom: '',       // nom de l'origen/localització (ex: TEATRE PRINCIPAL D'ALACANT)
+    logoId: null,  // logo opcional
+    linies: [],
+  }
+}
+
+function novaLiniaComunicacio() {
+  return {
+    id: uuidv4(),
+    recursCamp: '',        // recurs a l'origen (ex: TIELINE GATEWAY Codec 1)
+    ubicacioDesti: 'cct',  // 'cct' | 'est2' | 'est3' | 'motxilles' | 'conti' | ...
+    recursDestiId: null,   // id del recurs del catàleg filtrat per ubicacioDesti
+    recursDestiNom: '',    // nom cached
+    etiquetaTx: '',        // senyal camp→destí, buit = no es renderitza
+    etiquetaRx: '',        // senyal destí→camp, buit = no es renderitza
   }
 }
 
@@ -223,10 +231,10 @@ export const useContribucionsStore = defineStore('contribucions', () => {
   function afegirComunicacio(contribucioId) {
     const c = getById(contribucioId)
     if (!c) return null
-    const com = novaComunicacio()
-    c.comunicacions.push(com)
+    const grup = nouGrupComunicacio()
+    c.comunicacions.push(grup)
     actualitzar(contribucioId, { comunicacions: c.comunicacions })
-    return com
+    return grup
   }
 
   function eliminarComunicacio(contribucioId, comId) {
@@ -266,5 +274,6 @@ export const useContribucionsStore = defineStore('contribucions', () => {
     afegirContacte, eliminarContacte,
     novaViaEquip, novaInstanciaEquip, novaSenyal,
     nouRecursInternCCT, novaViaCCT,
+    nouGrupComunicacio, novaLiniaComunicacio,
   }
 })
