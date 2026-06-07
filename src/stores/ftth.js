@@ -81,8 +81,14 @@ export const useFtthStore = defineStore('ftth', () => {
     return localitzacions.value.find(l => l.id === id) || null
   }
 
-  async function crearLocalitzacio(base = {}) {
-    const nova = novaLocalitzacio(base)
+  // Crea un objecte local sense escriure a Firestore (per al formulari de nova)
+  function novaLocalitzacioLocal() {
+    return novaLocalitzacio()
+  }
+
+  // Accepta un objecte ja construït (quan ve del formulari) o crea un de nou
+  async function crearLocalitzacio(data = {}) {
+    const nova = data.id ? { ...novaLocalitzacio(), ...data } : novaLocalitzacio(data)
     await setDoc(doc(db, COL_LOC, nova.id), toFirestore(nova))
     localitzacions.value.unshift(nova)
     return nova
@@ -198,7 +204,7 @@ export const useFtthStore = defineStore('ftth', () => {
     instaladors,
     carregant, error,
     carregarTot,
-    crearLocalitzacio, actualitzarLocalitzacio, eliminarLocalitzacio, getLocalitzacioById,
+    novaLocalitzacioLocal, crearLocalitzacio, actualitzarLocalitzacio, eliminarLocalitzacio, getLocalitzacioById,
     afegirFoto, actualitzarNotaFoto, eliminarFoto,
     afegirSpeedResult,
     crearInstalador, actualitzarInstalador, eliminarInstalador, getInstaladorById,

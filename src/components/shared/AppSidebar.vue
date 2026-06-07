@@ -97,7 +97,7 @@
 
     <!-- Footer -->
     <div class="sidebar-footer">
-      <div class="sidebar-footer-text">À Mèdia · v0.9</div>
+      <div class="sidebar-footer-text">À Mèdia · v1.0.1</div>
     </div>
   </nav>
 </template>

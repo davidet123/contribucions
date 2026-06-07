@@ -351,6 +351,8 @@ const transportAltreSel = computed(() =>
   localitzacio.value?.transportSenyal?.includes('altre')
 )
 
+const isNou = ref(false)
+
 onMounted(async () => {
   const id = route.params.id
   if (id && id !== 'nova') {
@@ -360,13 +362,13 @@ onMounted(async () => {
     const loc = store.getLocalitzacioById(id)
     if (loc) {
       localitzacio.value = JSON.parse(JSON.stringify(loc))
+      isNou.value = false
     } else {
       router.push('/localitzacio')
     }
   } else {
-    const nova = await store.crearLocalitzacio()
-    localitzacio.value = JSON.parse(JSON.stringify(nova))
-    router.replace('/localitzacio/' + nova.id)
+    localitzacio.value = store.novaLocalitzacioLocal()
+    isNou.value = true
   }
 })
 
@@ -401,30 +403,52 @@ function eliminarMaterial(idx) {
 
 // ── Fotos ─────────────────────────────────────────────────────────────────
 async function afegirFoto(dataUrl) {
+  if (isNou.value) {
+    const { imageStorage } = await import('@/utils/storage')
+    const key = uuidv4()
+    const url = await imageStorage.save(key, dataUrl)
+    if (url) {
+      const foto = { id: uuidv4(), url, nota: '' }
+      localitzacio.value.fotos = [...(localitzacio.value.fotos || []), foto]
+    }
+    return
+  }
   const foto = await store.afegirFoto(localitzacio.value.id, dataUrl)
   if (foto) {
-    // Actualitzar la llista de fotos localment sense rellegir tota la store
     localitzacio.value.fotos = [...(localitzacio.value.fotos || []), foto]
   }
 }
 
 function eliminarFoto(fotoId) {
+  if (isNou.value) {
+    localitzacio.value.fotos = localitzacio.value.fotos.filter(f => f.id !== fotoId)
+    return
+  }
   store.eliminarFoto(localitzacio.value.id, fotoId)
   const updated = store.getLocalitzacioById(localitzacio.value.id)
   localitzacio.value.fotos = updated.fotos
 }
 
 function actualitzarNotaFoto(fotoId, nota) {
+  if (isNou.value) {
+    const foto = localitzacio.value.fotos.find(f => f.id === fotoId)
+    if (foto) foto.nota = nota
+    return
+  }
   store.actualitzarNotaFoto(localitzacio.value.id, fotoId, nota)
 }
 
 // ── Guardar / Eliminar ────────────────────────────────────────────────────
-function guardar() {
+async function guardar() {
   if (!localitzacio.value.nom?.trim()) {
     alert('El nom de la localització és obligatori')
     return
   }
-  store.actualitzarLocalitzacio(localitzacio.value.id, localitzacio.value)
+  if (isNou.value) {
+    await store.crearLocalitzacio(localitzacio.value)
+  } else {
+    await store.actualitzarLocalitzacio(localitzacio.value.id, localitzacio.value)
+  }
   router.push('/localitzacio')
 }
 

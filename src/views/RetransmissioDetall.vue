@@ -219,8 +219,9 @@ const storeLoc   = useLocalitzacioStore()
 const retransmissio = ref(null)
 const dialogEliminar = ref(false)
 
+const isNou = ref(false)
+
 onMounted(async () => {
-  // Assegurar que totes les stores tenen dades per als selectors
   await Promise.all([
     store.llista.length === 0 ? store.carregarTotes() : Promise.resolve(),
     storeContr.llista.length === 0 ? storeContr.carregarTotes() : Promise.resolve(),
@@ -233,13 +234,13 @@ onMounted(async () => {
     const r = store.getById(id)
     if (r) {
       retransmissio.value = JSON.parse(JSON.stringify(r))
+      isNou.value = false
     } else {
       router.push('/retransmissions')
     }
   } else {
-    const nova = await store.crear()
-    retransmissio.value = JSON.parse(JSON.stringify(nova))
-    router.replace('/retransmissions/' + nova.id)
+    retransmissio.value = store.novaRetransmissioLocal()
+    isNou.value = true
   }
 })
 
@@ -280,7 +281,11 @@ async function guardar() {
     alert('El nom de la retransmissió és obligatori')
     return
   }
-  await store.actualitzar(retransmissio.value.id, retransmissio.value)
+  if (isNou.value) {
+    await store.crear(retransmissio.value)
+  } else {
+    await store.actualitzar(retransmissio.value.id, retransmissio.value)
+  }
   router.push('/retransmissions')
 }
 

@@ -66,8 +66,12 @@ export const useRetransmissionsStore = defineStore('retransmissions', () => {
     return llista.value.find(r => r.id === id) || null
   }
 
-  async function crear(base = {}) {
-    const nova = novaRetransmissio(base)
+  function novaRetransmissioLocal() {
+    return novaRetransmissio()
+  }
+
+  async function crear(data = {}) {
+    const nova = data.id ? { ...novaRetransmissio(), ...data } : novaRetransmissio(data)
     await setDoc(doc(db, COL, nova.id), toFirestore(nova))
     llista.value.unshift(nova)
     return nova
@@ -128,6 +132,6 @@ export const useRetransmissionsStore = defineStore('retransmissions', () => {
     llista, llistaOrdenada, properes, enEmissio,
     carregant, error,
     carregarTotes,
-    getById, crear, actualitzar, eliminar,
+    novaRetransmissioLocal, getById, crear, actualitzar, eliminar,
   }
 })

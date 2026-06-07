@@ -37,7 +37,7 @@
         <span>Nova contribució</span>
       </button>
       <button class="accio-btn" @click="$router.push('/ftth/nova')">
-        <v-icon size="20">mdi-fiber-optical</v-icon>
+        <v-icon size="20">mdi-web</v-icon>
         <span>Nova FTTH</span>
       </button>
       <button class="accio-btn" @click="$router.push('/localitzacio/nova')">
@@ -193,7 +193,7 @@ const activitatRecent = computed(() => {
       id: l.id, nom: l.nom || 'Sense nom', updatedAt: l.updatedAt,
       tipus: 'ftth', tipusLabel: 'FTTH',
       ruta: '/ftth/' + l.id,
-      icon: 'mdi-fiber-optical', color: 'success',
+      icon: 'mdi-web', color: 'success',
     })),
     ...storeLoc.localitzacions.map(l => ({
       id: l.id, nom: l.nom || 'Sense nom', updatedAt: l.updatedAt,

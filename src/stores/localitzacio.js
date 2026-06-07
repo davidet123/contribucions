@@ -74,8 +74,12 @@ export const useLocalitzacioStore = defineStore('localitzacio', () => {
     return localitzacions.value.find(l => l.id === id) || null
   }
 
-  async function crearLocalitzacio(base = {}) {
-    const nova = novaLocalitzacio(base)
+  function novaLocalitzacioLocal() {
+    return novaLocalitzacio()
+  }
+
+  async function crearLocalitzacio(data = {}) {
+    const nova = data.id ? { ...novaLocalitzacio(), ...data } : novaLocalitzacio(data)
     await setDoc(doc(db, COL, nova.id), toFirestore(nova))
     localitzacions.value.unshift(nova)
     return nova
@@ -144,7 +148,7 @@ export const useLocalitzacioStore = defineStore('localitzacio', () => {
     localitzacions, localitzacionsOrdenades,
     carregant, error,
     carregarTotes,
-    crearLocalitzacio, actualitzarLocalitzacio, eliminarLocalitzacio, getLocalitzacioById,
+    novaLocalitzacioLocal, crearLocalitzacio, actualitzarLocalitzacio, eliminarLocalitzacio, getLocalitzacioById,
     afegirFoto, actualitzarNotaFoto, eliminarFoto,
   }
 })

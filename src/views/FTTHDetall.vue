@@ -180,6 +180,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 import { useRoute, useRouter } from 'vue-router'
 import { useFtthStore } from '@/stores/ftth'
 import SpeedTest from '@/components/ftth/SpeedTest.vue'
@@ -199,25 +200,26 @@ const tipusOptions = [
   { value: 'ocasional', label: 'Ocasional' },
 ]
 
+// isNou indica que encara no s'ha guardat a Firestore
+const isNou = ref(false)
+
 onMounted(async () => {
   const id = route.params.id
   if (id && id !== 'nova') {
-    // Pot ser que la store encara no hagi carregat (Firestore async).
-    // Intentem carregar si la llista és buida.
     if (store.localitzacions.length === 0) {
       await store.carregarTot()
     }
     const loc = store.getLocalitzacioById(id)
     if (loc) {
       localitzacio.value = JSON.parse(JSON.stringify(loc))
+      isNou.value = false
     } else {
       router.push('/ftth')
     }
   } else {
-    // Crear nova i esperar l'await (crearLocalitzacio és async amb Firestore)
-    const nova = await store.crearLocalitzacio()
-    localitzacio.value = JSON.parse(JSON.stringify(nova))
-    router.replace('/ftth/' + nova.id)
+    // Crear objecte local sense escriure a Firestore
+    localitzacio.value = store.novaLocalitzacioLocal()
+    isNou.value = true
   }
 })
 
@@ -265,35 +267,64 @@ function netejarInstalador() {
 }
 
 function guardarSpeedResult(result) {
-  store.afegirSpeedResult(localitzacio.value.id, result)
-  const updated = store.getLocalitzacioById(localitzacio.value.id)
-  localitzacio.value.speedResults = updated.speedResults
+  if (isNou.value) {
+    // Guardar localment fins que es faci el primer save
+    const entry = { id: uuidv4(), date: new Date().toISOString(), ...result }
+    localitzacio.value.speedResults = [entry, ...(localitzacio.value.speedResults || [])]
+  } else {
+    store.afegirSpeedResult(localitzacio.value.id, result)
+    const updated = store.getLocalitzacioById(localitzacio.value.id)
+    localitzacio.value.speedResults = updated.speedResults
+  }
 }
 
 async function afegirFoto(dataUrl) {
+  if (isNou.value) {
+    // Pujar a Cloudinary però guardar localment fins al primer save
+    const { imageStorage } = await import('@/utils/storage')
+    const key = uuidv4()
+    const url = await imageStorage.save(key, dataUrl)
+    if (url) {
+      const foto = { id: uuidv4(), url, nota: '' }
+      localitzacio.value.fotos = [...(localitzacio.value.fotos || []), foto]
+    }
+    return
+  }
   const foto = await store.afegirFoto(localitzacio.value.id, dataUrl)
   if (foto) {
-    // Actualitzar la llista de fotos localment sense rellegir tota la store
     localitzacio.value.fotos = [...(localitzacio.value.fotos || []), foto]
   }
 }
 
 function eliminarFoto(fotoId) {
+  if (isNou.value) {
+    localitzacio.value.fotos = localitzacio.value.fotos.filter(f => f.id !== fotoId)
+    return
+  }
   store.eliminarFoto(localitzacio.value.id, fotoId)
   const updated = store.getLocalitzacioById(localitzacio.value.id)
   localitzacio.value.fotos = updated.fotos
 }
 
 function actualitzarNotaFoto(fotoId, nota) {
+  if (isNou.value) {
+    const foto = localitzacio.value.fotos.find(f => f.id === fotoId)
+    if (foto) foto.nota = nota
+    return
+  }
   store.actualitzarNotaFoto(localitzacio.value.id, fotoId, nota)
 }
 
-function guardar() {
+async function guardar() {
   if (!localitzacio.value.nom.trim()) {
     alert('El nom de la localització és obligatori')
     return
   }
-  store.actualitzarLocalitzacio(localitzacio.value.id, localitzacio.value)
+  if (isNou.value) {
+    await store.crearLocalitzacio(localitzacio.value)
+  } else {
+    await store.actualitzarLocalitzacio(localitzacio.value.id, localitzacio.value)
+  }
   router.push('/ftth')
 }
 
