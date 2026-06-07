@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import {
   collection, doc, getDocs, setDoc, updateDoc,
-  deleteDoc, query, orderBy, where, serverTimestamp, Timestamp,
+  deleteDoc, query, orderBy, serverTimestamp, Timestamp,
 } from 'firebase/firestore'
 import { db } from '@/services/firebase'
 import dayjs from 'dayjs'
@@ -141,29 +141,10 @@ export const useContribucionsStore = defineStore('contribucions', () => {
     carregant.value = true
     error.value = null
     try {
-      const lastSync = localStorage.getItem('contribucions_lastSync')
-
-      if (!lastSync) {
-        const q = query(collection(db, COL), orderBy('updatedAt', 'desc'))
-        const snap = await getDocs(q)
-        llista.value = snap.docs.map(d => ({ ...d.data(), id: d.id }))
-      } else {
-        const snap = await getDocs(
-          query(
-            collection(db, COL),
-            where('updatedAt', '>', lastSync),
-            orderBy('updatedAt', 'desc')
-          )
-        )
-        const nous = snap.docs.map(d => ({ ...d.data(), id: d.id }))
-        for (const nouDoc of nous) {
-          const idx = llista.value.findIndex(r => r.id === nouDoc.id)
-          if (idx !== -1) llista.value[idx] = nouDoc
-          else llista.value.unshift(nouDoc)
-        }
-      }
-
-      localStorage.setItem('contribucions_lastSync', new Date().toISOString())
+      const snap = await getDocs(
+        query(collection(db, COL), orderBy('updatedAt', 'desc'))
+      )
+      llista.value = snap.docs.map(d => ({ ...d.data(), id: d.id }))
     } catch (err) {
       console.error('Error carregant contribucions:', err)
       error.value = err.message

@@ -9,8 +9,6 @@ import {
 import { db } from '@/services/firebase'
 
 const COL = 'retransmissions'
-const SYNC_KEY = 'retransmissions_lastSync'
-
 export const ESTATS = [
   { value: 'planificacio', label: 'Planificació', color: 'grey' },
   { value: 'confirmada',   label: 'Confirmada',   color: 'info' },
@@ -47,64 +45,20 @@ export const useRetransmissionsStore = defineStore('retransmissions', () => {
   const carregant    = ref(false)
   const error        = ref(null)
 
-  // ── Sincronització incremental ────────────────────────────────────────────
-  // La primera càrrega descarrega tot. Les següents, només els docs modificats
-  // des de l'última sincronització (updatedAt > lastSync).
-
-  function getLastSync() {
-    return localStorage.getItem(SYNC_KEY) || null
-  }
-
-  function setLastSync() {
-    localStorage.setItem(SYNC_KEY, new Date().toISOString())
-  }
-
   async function carregarTotes() {
     carregant.value = true
     error.value = null
     try {
-      const lastSync = getLastSync()
-
-      if (!lastSync) {
-        // Primera càrrega: descarregar tot
-        const snap = await getDocs(
-          query(collection(db, COL), orderBy('updatedAt', 'desc'))
-        )
-        llista.value = snap.docs.map(d => ({ ...d.data(), id: d.id }))
-      } else {
-        // Càrregues posteriors: només els modificats des de lastSync
-        const snap = await getDocs(
-          query(
-            collection(db, COL),
-            where('updatedAt', '>', lastSync),
-            orderBy('updatedAt', 'desc')
-          )
-        )
-        const nous = snap.docs.map(d => ({ ...d.data(), id: d.id }))
-        // Fusionar amb els que ja tenim en memòria
-        for (const doc of nous) {
-          const idx = llista.value.findIndex(r => r.id === doc.id)
-          if (idx !== -1) {
-            llista.value[idx] = doc
-          } else {
-            llista.value.unshift(doc)
-          }
-        }
-      }
-
-      setLastSync()
+      const snap = await getDocs(
+        query(collection(db, COL), orderBy('updatedAt', 'desc'))
+      )
+      llista.value = snap.docs.map(d => ({ ...d.data(), id: d.id }))
     } catch (err) {
       console.error('Error carregant retransmissions:', err)
       error.value = err.message
     } finally {
       carregant.value = false
     }
-  }
-
-  // Forçar recàrrega completa (per si cal)
-  function invalidarCache() {
-    localStorage.removeItem(SYNC_KEY)
-    llista.value = []
   }
 
   // ── CRUD ──────────────────────────────────────────────────────────────────
@@ -173,7 +127,7 @@ export const useRetransmissionsStore = defineStore('retransmissions', () => {
   return {
     llista, llistaOrdenada, properes, enEmissio,
     carregant, error,
-    carregarTotes, invalidarCache,
+    carregarTotes,
     getById, crear, actualitzar, eliminar,
   }
 })

@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import {
   collection, doc, getDocs, setDoc,
-  deleteDoc, query, orderBy, where,
+  deleteDoc, query, orderBy,
 } from 'firebase/firestore'
 import { db } from '@/services/firebase'
 import { imageStorage } from '@/utils/storage'
@@ -56,29 +56,10 @@ export const useLocalitzacioStore = defineStore('localitzacio', () => {
     carregant.value = true
     error.value = null
     try {
-      const lastSync = localStorage.getItem('localitzacio_lastSync')
-
-      if (!lastSync) {
-        const q = query(collection(db, COL), orderBy('updatedAt', 'desc'))
-        const snap = await getDocs(q)
-        localitzacions.value = snap.docs.map(d => ({ ...d.data(), id: d.id }))
-      } else {
-        const snap = await getDocs(
-          query(
-            collection(db, COL),
-            where('updatedAt', '>', lastSync),
-            orderBy('updatedAt', 'desc')
-          )
-        )
-        const nous = snap.docs.map(d => ({ ...d.data(), id: d.id }))
-        for (const nouDoc of nous) {
-          const idx = localitzacions.value.findIndex(r => r.id === nouDoc.id)
-          if (idx !== -1) localitzacions.value[idx] = nouDoc
-          else localitzacions.value.unshift(nouDoc)
-        }
-      }
-
-      localStorage.setItem('localitzacio_lastSync', new Date().toISOString())
+      const snap = await getDocs(
+        query(collection(db, COL), orderBy('updatedAt', 'desc'))
+      )
+      localitzacions.value = snap.docs.map(d => ({ ...d.data(), id: d.id }))
     } catch (err) {
       console.error('Error carregant localitzacio:', err)
       error.value = err.message
