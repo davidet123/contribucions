@@ -170,7 +170,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useCatalegStore } from '@/stores/cataleg'
 import { UBICACIONS_COM } from '@/utils/constants'
@@ -188,9 +188,18 @@ const liniaPerRecurs = ref(null)
 
 // Logos
 const logoInputs = ref({})
+const logosCache = ref({})
+
+onMounted(async () => {
+  for (const grup of comunicacionsLocal.value) {
+    if (grup.logoId) {
+      logosCache.value[grup.id] = await imageStorage.get(grup.logoId)
+    }
+  }
+})
+
 function getLogoSrc(grup) {
-  if (!grup.logoId) return null
-  return imageStorage.get(grup.logoId)
+  return logosCache.value[grup.id] || null
 }
 function triggerLogoUpload(grup) {
   logoInputs.value[grup.id]?.click()
@@ -200,13 +209,15 @@ async function handleLogoChange(e, grup) {
   if (!file) return
   const b64 = await fileToBase64(file)
   const id = 'com_logo_' + grup.id
-  imageStorage.save(id, b64)
+  const url = await imageStorage.save(id, b64)
   grup.logoId = id
+  logosCache.value[grup.id] = url || b64
   emitUpdate()
 }
-function esborrarLogo(grup) {
-  if (grup.logoId) imageStorage.remove(grup.logoId)
+async function esborrarLogo(grup) {
+  if (grup.logoId) await imageStorage.remove(grup.logoId)
   grup.logoId = null
+  delete logosCache.value[grup.id]
   emitUpdate()
 }
 

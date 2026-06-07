@@ -1,23 +1,33 @@
+// src/stores/ftth.js
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
-import { storage, imageStorage } from '@/utils/storage'
-import dayjs from 'dayjs'
+import {
+  collection, doc, getDocs, setDoc,
+  deleteDoc, query, orderBy,
+} from 'firebase/firestore'
+import { db } from '@/services/firebase'
+import { imageStorage } from '@/utils/storage'
+
+const COL_LOC = 'ftth_localitzacions'
+const COL_INS = 'ftth_instaladors'
+
+// ─── Factories ────────────────────────────────────────────────────────────────
 
 function novaLocalitzacio(base = {}) {
   return {
     id: uuidv4(),
     nom: '',
     adreca: '',
-    tipus: 'permanent',       // 'permanent' | 'ocasional'
+    tipus: 'permanent',
     ip: '',
     ipDetectedAt: null,
-    telefonFixe: '',          // ← NUEVO: teléfono fijo asociado a la FTTH
-    speedResults: [],          // [{ id, date, download, upload, ping }]
+    telefonFixe: '',
+    speedResults: [],
     instaladorId: null,
     telefonManual: '',
     notes: '',
-    fotos: [],                 // [{ id, imageKey, nota }]
+    fotos: [],   // [{ id, url, nota }]  ← ara url en comptes de imageKey
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     ...base,
@@ -35,81 +45,109 @@ function nouInstalador(base = {}) {
   }
 }
 
+function toFirestore(obj) {
+  return JSON.parse(JSON.stringify(obj))
+}
+
+// ─── Store ────────────────────────────────────────────────────────────────────
+
 export const useFtthStore = defineStore('ftth', () => {
 
   // ── Localitzacions ──────────────────────────────────────────────────────
-  const localitzacions = ref(storage.get('ftth_localitzacions') || [])
+  const localitzacions = ref([])
+  const instaladors = ref([])
+  const carregant = ref(false)
+  const error = ref(null)
 
-  function saveLocalitzacions() {
-    storage.set('ftth_localitzacions', localitzacions.value)
-  }
-
-  function crearLocalitzacio(base = {}) {
-    const nova = novaLocalitzacio(base)
-    localitzacions.value.unshift(nova)
-    saveLocalitzacions()
-    return nova
-  }
-
-  function actualitzarLocalitzacio(id, data) {
-    const idx = localitzacions.value.findIndex(l => l.id === id)
-    if (idx === -1) return false
-    localitzacions.value[idx] = {
-      ...localitzacions.value[idx],
-      ...data,
-      updatedAt: new Date().toISOString(),
+  async function carregarTot() {
+    carregant.value = true
+    error.value = null
+    try {
+      const [locSnap, insSnap] = await Promise.all([
+        getDocs(query(collection(db, COL_LOC), orderBy('updatedAt', 'desc'))),
+        getDocs(collection(db, COL_INS)),
+      ])
+      localitzacions.value = locSnap.docs.map(d => ({ ...d.data(), id: d.id }))
+      instaladors.value = insSnap.docs.map(d => ({ ...d.data(), id: d.id }))
+    } catch (err) {
+      console.error('Error carregant FTTH:', err)
+      error.value = err.message
+    } finally {
+      carregant.value = false
     }
-    saveLocalitzacions()
-    return true
-  }
-
-  function eliminarLocalitzacio(id) {
-    const loc = localitzacions.value.find(l => l.id === id)
-    if (loc) {
-      // Netejar fotos del storage
-      loc.fotos.forEach(f => imageStorage.remove(f.imageKey))
-    }
-    localitzacions.value = localitzacions.value.filter(l => l.id !== id)
-    saveLocalitzacions()
   }
 
   function getLocalitzacioById(id) {
     return localitzacions.value.find(l => l.id === id) || null
   }
 
-  // ── Fotos ────────────────────────────────────────────────────────────────
-  function afegirFoto(localitzacioId, dataUrl, nota = '') {
+  async function crearLocalitzacio(base = {}) {
+    const nova = novaLocalitzacio(base)
+    await setDoc(doc(db, COL_LOC, nova.id), toFirestore(nova))
+    localitzacions.value.unshift(nova)
+    return nova
+  }
+
+  async function actualitzarLocalitzacio(id, data) {
+    const idx = localitzacions.value.findIndex(l => l.id === id)
+    if (idx === -1) return false
+    const updated = {
+      ...localitzacions.value[idx],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    }
+    await setDoc(doc(db, COL_LOC, id), toFirestore(updated))
+    localitzacions.value[idx] = updated
+    return true
+  }
+
+  async function eliminarLocalitzacio(id) {
+    const loc = getLocalitzacioById(id)
+    if (loc) {
+      // Eliminar totes les fotos del Storage
+      await Promise.all(loc.fotos.map(f => imageStorage.remove(f.url)))
+    }
+    await deleteDoc(doc(db, COL_LOC, id))
+    localitzacions.value = localitzacions.value.filter(l => l.id !== id)
+  }
+
+  // ── Fotos ─────────────────────────────────────────────────────────────────
+  // Les fotos ara guarden la URL pública de Firebase Storage, no una clau local.
+  // El component FotoUploader passa un dataUrl; el store el puja i guarda la URL.
+
+  async function afegirFoto(localitzacioId, dataUrl, nota = '') {
     const loc = getLocalitzacioById(localitzacioId)
     if (!loc) return null
-    const foto = { id: uuidv4(), imageKey: uuidv4(), nota }
-    const ok = imageStorage.save(foto.imageKey, dataUrl)
-    if (!ok) return null
+    const key = uuidv4()
+    const url = await imageStorage.save(key, dataUrl)
+    if (!url) return null
+    const foto = { id: uuidv4(), url, nota }
     loc.fotos.push(foto)
-    actualitzarLocalitzacio(localitzacioId, { fotos: loc.fotos })
+    await actualitzarLocalitzacio(localitzacioId, { fotos: loc.fotos })
     return foto
   }
 
-  function actualitzarNotaFoto(localitzacioId, fotoId, nota) {
+  async function actualitzarNotaFoto(localitzacioId, fotoId, nota) {
     const loc = getLocalitzacioById(localitzacioId)
     if (!loc) return
     const foto = loc.fotos.find(f => f.id === fotoId)
     if (foto) {
       foto.nota = nota
-      actualitzarLocalitzacio(localitzacioId, { fotos: loc.fotos })
+      await actualitzarLocalitzacio(localitzacioId, { fotos: loc.fotos })
     }
   }
 
-  function eliminarFoto(localitzacioId, fotoId) {
+  async function eliminarFoto(localitzacioId, fotoId) {
     const loc = getLocalitzacioById(localitzacioId)
     if (!loc) return
     const foto = loc.fotos.find(f => f.id === fotoId)
-    if (foto) imageStorage.remove(foto.imageKey)
+    if (foto) await imageStorage.remove(foto.url)
     loc.fotos = loc.fotos.filter(f => f.id !== fotoId)
-    actualitzarLocalitzacio(localitzacioId, { fotos: loc.fotos })
+    await actualitzarLocalitzacio(localitzacioId, { fotos: loc.fotos })
   }
 
-  // ── Speed results ────────────────────────────────────────────────────────
-  function afegirSpeedResult(localitzacioId, result) {
+  // ── Speed results ─────────────────────────────────────────────────────────
+  async function afegirSpeedResult(localitzacioId, result) {
     const loc = getLocalitzacioById(localitzacioId)
     if (!loc) return
     const entry = {
@@ -120,65 +158,49 @@ export const useFtthStore = defineStore('ftth', () => {
       ping: result.ping,
     }
     loc.speedResults.unshift(entry)
-    actualitzarLocalitzacio(localitzacioId, { speedResults: loc.speedResults })
+    await actualitzarLocalitzacio(localitzacioId, { speedResults: loc.speedResults })
     return entry
   }
 
-  // ── Computed ─────────────────────────────────────────────────────────────
-  const localitzacionsOrdenades = computed(() =>
-    [...localitzacions.value].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-  )
-
-  // ── Instal·ladors ────────────────────────────────────────────────────────
-  const instaladors = ref(storage.get('ftth_instaladors') || [])
-
-  function saveInstaladors() {
-    storage.set('ftth_instaladors', instaladors.value)
-  }
-
-  function crearInstalador(base = {}) {
-    const nou = nouInstalador(base)
-    instaladors.value.push(nou)
-    saveInstaladors()
-    return nou
-  }
-
-  function actualitzarInstalador(id, data) {
-    const idx = instaladors.value.findIndex(i => i.id === id)
-    if (idx === -1) return false
-    instaladors.value[idx] = { ...instaladors.value[idx], ...data }
-    saveInstaladors()
-    return true
-  }
-
-  function eliminarInstalador(id) {
-    instaladors.value = instaladors.value.filter(i => i.id !== id)
-    saveInstaladors()
-  }
-
+  // ── Instal·ladors ─────────────────────────────────────────────────────────
   function getInstaladorById(id) {
     return instaladors.value.find(i => i.id === id) || null
   }
 
+  async function crearInstalador(base = {}) {
+    const nou = nouInstalador(base)
+    await setDoc(doc(db, COL_INS, nou.id), toFirestore(nou))
+    instaladors.value.push(nou)
+    return nou
+  }
+
+  async function actualitzarInstalador(id, data) {
+    const idx = instaladors.value.findIndex(i => i.id === id)
+    if (idx === -1) return false
+    const updated = { ...instaladors.value[idx], ...data }
+    await setDoc(doc(db, COL_INS, id), toFirestore(updated))
+    instaladors.value[idx] = updated
+    return true
+  }
+
+  async function eliminarInstalador(id) {
+    await deleteDoc(doc(db, COL_INS, id))
+    instaladors.value = instaladors.value.filter(i => i.id !== id)
+  }
+
+  // ── Computed ──────────────────────────────────────────────────────────────
+  const localitzacionsOrdenades = computed(() =>
+    [...localitzacions.value].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+  )
+
   return {
-    // Localitzacions
-    localitzacions,
-    localitzacionsOrdenades,
-    crearLocalitzacio,
-    actualitzarLocalitzacio,
-    eliminarLocalitzacio,
-    getLocalitzacioById,
-    // Fotos
-    afegirFoto,
-    actualitzarNotaFoto,
-    eliminarFoto,
-    // Speed
-    afegirSpeedResult,
-    // Instal·ladors
+    localitzacions, localitzacionsOrdenades,
     instaladors,
-    crearInstalador,
-    actualitzarInstalador,
-    eliminarInstalador,
-    getInstaladorById,
+    carregant, error,
+    carregarTot,
+    crearLocalitzacio, actualitzarLocalitzacio, eliminarLocalitzacio, getLocalitzacioById,
+    afegirFoto, actualitzarNotaFoto, eliminarFoto,
+    afegirSpeedResult,
+    crearInstalador, actualitzarInstalador, eliminarInstalador, getInstaladorById,
   }
 })

@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useCatalegStore } from '@/stores/cataleg'
 import { imageStorage } from '@/utils/storage'
 import EquipFilaDiagrama from './EquipFilaDiagrama.vue'
@@ -87,10 +87,10 @@ const props = defineProps({
 
 const cataleg = useCatalegStore()
 
-const imatgeLloc = computed(() => {
-  if (!props.contribucio?.imatgeLlocId) return null
-  return imageStorage.get(props.contribucio.imatgeLlocId)
-})
+const imatgeLloc = ref(null)
+watch(() => props.contribucio?.imatgeLlocId, async (id) => {
+  imatgeLloc.value = id ? await imageStorage.get(id) : null
+}, { immediate: true })
 
 function getNomEquip(instancia) {
   if (instancia.nomPersonalitzat) return instancia.nomPersonalitzat

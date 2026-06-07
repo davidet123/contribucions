@@ -47,7 +47,7 @@
       >
         <div class="card-header">
           <span class="card-title">{{ loc.nom || 'Sense nom' }}</span>
-          <div class="card-chips">
+          <div class="card-header-right">
             <v-chip
               v-if="loc.transportSenyal?.length"
               size="x-small"
@@ -56,6 +56,15 @@
             >
               {{ loc.transportSenyal.length }} transport{{ loc.transportSenyal.length !== 1 ? 's' : '' }}
             </v-chip>
+            <v-btn
+              icon
+              size="x-small"
+              variant="text"
+              color="error"
+              @click.stop="confirmarEliminar(loc)"
+            >
+              <v-icon size="14">mdi-delete-outline</v-icon>
+            </v-btn>
           </div>
         </div>
         <p v-if="loc.adreca" class="card-adreca">
@@ -87,16 +96,33 @@
         </div>
       </div>
     </div>
+
+    <!-- Dialog confirmar eliminar -->
+    <v-dialog v-model="dialogEliminar" max-width="400">
+      <v-card>
+        <v-card-title class="text-h6 pa-6 pb-2">Eliminar localització</v-card-title>
+        <v-card-text>
+          Estàs segur que vols eliminar <strong>{{ aEliminar?.nom || 'aquesta localització' }}</strong>?
+          S'eliminaran també totes les fotos associades. Aquesta acció no es pot desfer.
+        </v-card-text>
+        <v-card-actions class="pa-4 pt-0">
+          <v-spacer />
+          <v-btn variant="text" @click="dialogEliminar = false">Cancel·lar</v-btn>
+          <v-btn color="error" @click="ferEliminar">Eliminar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useLocalitzacioStore } from '@/stores/localitzacio'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 
 const store = useLocalitzacioStore()
+onMounted(() => store.carregarTotes())
 const { localitzacionsOrdenades } = storeToRefs(store)
 
 const cerca = ref('')
@@ -112,6 +138,22 @@ const llistaFiltrada = computed(() => {
   }
   return llista
 })
+
+const dialogEliminar = ref(false)
+const aEliminar = ref(null)
+
+function confirmarEliminar(loc) {
+  aEliminar.value = loc
+  dialogEliminar.value = true
+}
+
+async function ferEliminar() {
+  if (aEliminar.value) {
+    await store.eliminarLocalitzacio(aEliminar.value.id)
+    dialogEliminar.value = false
+    aEliminar.value = null
+  }
+}
 
 function formatData(iso) {
   return dayjs(iso).format('DD/MM/YY HH:mm')
@@ -212,6 +254,13 @@ function formatData(iso) {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .card-title {

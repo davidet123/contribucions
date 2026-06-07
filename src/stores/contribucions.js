@@ -1,8 +1,17 @@
+// src/stores/contribucions.js
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
-import { storage, imageStorage } from '@/utils/storage'
+import {
+  collection, doc, getDocs, setDoc, updateDoc,
+  deleteDoc, query, orderBy, serverTimestamp, Timestamp,
+} from 'firebase/firestore'
+import { db } from '@/services/firebase'
 import dayjs from 'dayjs'
+
+const COL = 'contribucions'
+
+// ─── Factories ────────────────────────────────────────────────────────────────
 
 function novaContribucio(base = {}) {
   return {
@@ -36,10 +45,10 @@ function novaViaEquip(numero = 1) {
     numero,
     direccio: 'tx',
     etiqueta: '',
-    tipusDesti: 'cct',       // 'cct' | 'extern'
+    tipusDesti: 'cct',
     destiCCTId: null,
     destiCCTNom: '',
-    destiExternNom: '',      // nom lliure quan tipusDesti === 'extern'
+    destiExternNom: '',
     urlExterna: '',
     notes: '',
   }
@@ -79,64 +88,80 @@ function novaSenyal() {
   }
 }
 
-// Recurs intern CCT: INGESTA, CONTINUÏTAT, E. POLIVALENT, ESTUDI 3...
 function nouRecursInternCCT() {
-  return {
-    id: uuidv4(),
-    nom: '',
-    vies: [], // { id, etiquetaVia, etiquetaSenyal, direccio, destiCCTNom, destiCCTId }
-  }
+  return { id: uuidv4(), nom: '', vies: [] }
 }
 
 function novaViaCCT() {
   return {
     id: uuidv4(),
-    etiquetaVia: '',     // 'EXT 1', 'PGM POL'... o buit si no té nomenclatura
-    etiquetaSenyal: '',  // 'POOL', 'PGM E. POLIVALENT'...
-    direccio: 'rx',      // rx | tx
-    tipusDesti: 'cct',   // 'cct' | 'extern'
+    etiquetaVia: '',
+    etiquetaSenyal: '',
+    direccio: 'rx',
+    tipusDesti: 'cct',
     destiCCTNom: '',
     destiCCTId: null,
-    destiExternNom: '',  // nom lliure quan tipusDesti === 'extern'
+    destiExternNom: '',
   }
 }
 
 function nouGrupComunicacio() {
-  return {
-    id: uuidv4(),
-    nom: '',       // nom de l'origen/localització (ex: TEATRE PRINCIPAL D'ALACANT)
-    logoId: null,  // logo opcional
-    linies: [],
-  }
+  return { id: uuidv4(), nom: '', logoId: null, linies: [] }
 }
 
 function novaLiniaComunicacio() {
   return {
     id: uuidv4(),
-    recursCamp: '',        // recurs a l'origen (ex: TIELINE GATEWAY Codec 1)
-    ubicacioDesti: 'cct',  // 'cct' | 'est2' | 'est3' | 'motxilles' | 'conti' | ...
-    recursDestiId: null,   // id del recurs del catàleg filtrat per ubicacioDesti
-    recursDestiNom: '',    // nom cached
-    etiquetaTx: '',        // senyal camp→destí, buit = no es renderitza
-    etiquetaRx: '',        // senyal destí→camp, buit = no es renderitza
+    recursCamp: '',
+    ubicacioDesti: 'cct',
+    recursDestiId: null,
+    recursDestiNom: '',
+    etiquetaTx: '',
+    etiquetaRx: '',
   }
 }
 
-export const useContribucionsStore = defineStore('contribucions', () => {
-  const llista = ref(storage.get('contribucions') || [])
+// ─── Helpers Firestore ────────────────────────────────────────────────────────
 
-  function save() {
-    storage.set('contribucions', llista.value)
+// Firestore no accepta undefined ni classes especials en arrays niats.
+// Serialitzem l'objecte a JSON net.
+function toFirestore(obj) {
+  return JSON.parse(JSON.stringify(obj))
+}
+
+// ─── Store ────────────────────────────────────────────────────────────────────
+
+export const useContribucionsStore = defineStore('contribucions', () => {
+  const llista = ref([])
+  const carregant = ref(false)
+  const error = ref(null)
+
+  // ── Càrrega inicial ──────────────────────────────────────────────────────
+  async function carregarTotes() {
+    carregant.value = true
+    error.value = null
+    try {
+      const q = query(collection(db, COL), orderBy('updatedAt', 'desc'))
+      const snap = await getDocs(q)
+      llista.value = snap.docs.map(d => ({ ...d.data(), id: d.id }))
+    } catch (err) {
+      console.error('Error carregant contribucions:', err)
+      error.value = err.message
+    } finally {
+      carregant.value = false
+    }
   }
 
-  function crear(base = {}) {
+  // ── CRUD ─────────────────────────────────────────────────────────────────
+  async function crear(base = {}) {
     const nova = novaContribucio(base)
+    const docRef = doc(db, COL, nova.id)
+    await setDoc(docRef, toFirestore(nova))
     llista.value.unshift(nova)
-    save()
     return nova
   }
 
-  function duplicar(id) {
+  async function duplicar(id) {
     const original = llista.value.find(c => c.id === id)
     if (!original) return null
     const copia = novaContribucio({
@@ -148,34 +173,37 @@ export const useContribucionsStore = defineStore('contribucions', () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })
+    const docRef = doc(db, COL, copia.id)
+    await setDoc(docRef, toFirestore(copia))
     llista.value.unshift(copia)
-    save()
     return copia
   }
 
-  function actualitzar(id, data) {
+  async function actualitzar(id, data) {
     const idx = llista.value.findIndex(c => c.id === id)
     if (idx === -1) return false
-    llista.value[idx] = {
+    const updated = {
       ...llista.value[idx],
       ...data,
       updatedAt: new Date().toISOString(),
       dataVersio: dayjs().format('DD/MM/YYYY'),
     }
-    save()
+    await setDoc(doc(db, COL, id), toFirestore(updated))
+    llista.value[idx] = updated
     return true
   }
 
-  function eliminar(id) {
+  async function eliminar(id) {
+    await deleteDoc(doc(db, COL, id))
     llista.value = llista.value.filter(c => c.id !== id)
-    save()
   }
 
   function getById(id) {
     return llista.value.find(c => c.id === id) || null
   }
 
-  function afegirEquip(contribucioId, equipId, tipusVies = []) {
+  // ── Helpers de sub-estructures (síncroni + actualitzar) ──────────────────
+  async function afegirEquip(contribucioId, equipId, tipusVies = []) {
     const c = getById(contribucioId)
     if (!c) return null
     const instancia = novaInstanciaEquip(equipId)
@@ -185,79 +213,79 @@ export const useContribucionsStore = defineStore('contribucions', () => {
       direccio: v.direccio || 'tx',
     }))
     c.equips.push(instancia)
-    actualitzar(contribucioId, { equips: c.equips })
+    await actualitzar(contribucioId, { equips: c.equips })
     return instancia
   }
 
-  function eliminarEquip(contribucioId, instanciaId) {
+  async function eliminarEquip(contribucioId, instanciaId) {
     const c = getById(contribucioId)
     if (!c) return
     c.equips = c.equips.filter(e => e.id !== instanciaId)
-    actualitzar(contribucioId, { equips: c.equips })
+    await actualitzar(contribucioId, { equips: c.equips })
   }
 
-  function afegirSenyal(contribucioId) {
+  async function afegirSenyal(contribucioId) {
     const c = getById(contribucioId)
     if (!c) return null
     const s = novaSenyal()
     c.senyals.push(s)
-    actualitzar(contribucioId, { senyals: c.senyals })
+    await actualitzar(contribucioId, { senyals: c.senyals })
     return s
   }
 
-  function eliminarSenyal(contribucioId, senyalId) {
+  async function eliminarSenyal(contribucioId, senyalId) {
     const c = getById(contribucioId)
     if (!c) return
     c.senyals = c.senyals.filter(s => s.id !== senyalId)
-    actualitzar(contribucioId, { senyals: c.senyals })
+    await actualitzar(contribucioId, { senyals: c.senyals })
   }
 
-  function afegirRoutingCCT(contribucioId) {
+  async function afegirRoutingCCT(contribucioId) {
     const c = getById(contribucioId)
     if (!c) return null
     const r = nouRecursInternCCT()
     c.routingCCT.push(r)
-    actualitzar(contribucioId, { routingCCT: c.routingCCT })
+    await actualitzar(contribucioId, { routingCCT: c.routingCCT })
     return r
   }
 
-  function eliminarRoutingCCT(contribucioId, routingId) {
+  async function eliminarRoutingCCT(contribucioId, routingId) {
     const c = getById(contribucioId)
     if (!c) return
     c.routingCCT = c.routingCCT.filter(r => r.id !== routingId)
-    actualitzar(contribucioId, { routingCCT: c.routingCCT })
+    await actualitzar(contribucioId, { routingCCT: c.routingCCT })
   }
 
-  function afegirComunicacio(contribucioId) {
+  async function afegirComunicacio(contribucioId) {
     const c = getById(contribucioId)
     if (!c) return null
     const grup = nouGrupComunicacio()
     c.comunicacions.push(grup)
-    actualitzar(contribucioId, { comunicacions: c.comunicacions })
+    await actualitzar(contribucioId, { comunicacions: c.comunicacions })
     return grup
   }
 
-  function eliminarComunicacio(contribucioId, comId) {
+  async function eliminarComunicacio(contribucioId, comId) {
     const c = getById(contribucioId)
     if (!c) return
     c.comunicacions = c.comunicacions.filter(com => com.id !== comId)
-    actualitzar(contribucioId, { comunicacions: c.comunicacions })
+    await actualitzar(contribucioId, { comunicacions: c.comunicacions })
   }
 
-  function afegirContacte(contribucioId, contacte) {
+  async function afegirContacte(contribucioId, contacte) {
     const c = getById(contribucioId)
     if (!c) return null
     const nou = { id: uuidv4(), rol: '', nom: '', telefon: '', ...contacte }
     c.contactes.push(nou)
-    actualitzar(contribucioId, { contactes: c.contactes })
+    await actualitzar(contribucioId, { contactes: c.contactes })
     return nou
   }
 
-  function eliminarContacte(contribucioId, contacteId) {
+  async function eliminarContacte(contribucioId, contacteId) {
     const c = getById(contribucioId)
     if (!c) return
     c.contactes = c.contactes.filter(ct => ct.id !== contacteId)
-    actualitzar(contribucioId, { contactes: c.contactes })
+    await actualitzar(contribucioId, { contactes: c.contactes })
   }
 
   const llistaOrdenada = computed(() =>
@@ -265,7 +293,8 @@ export const useContribucionsStore = defineStore('contribucions', () => {
   )
 
   return {
-    llista, llistaOrdenada,
+    llista, llistaOrdenada, carregant, error,
+    carregarTotes,
     crear, duplicar, actualitzar, eliminar, getById,
     afegirEquip, eliminarEquip,
     afegirSenyal, eliminarSenyal,

@@ -122,9 +122,13 @@ const dialogVersio = ref(false)
 const mostrarPreview = ref(false)
 const versioOriginal = ref(null)
 
-onMounted(() => {
-  if (route.params.id) {
-    const c = store.getById(route.params.id)
+onMounted(async () => {
+  const id = route.params.id
+  if (id && id !== 'nova') {
+    if (store.llista.length === 0) {
+      await store.carregarTotes()
+    }
+    const c = store.getById(id)
     if (c) {
       contribucio.value = JSON.parse(JSON.stringify(c))
       versioOriginal.value = c.versio
@@ -132,8 +136,7 @@ onMounted(() => {
       router.push('/contribucions')
     }
   } else {
-    // Nova
-    const nova = store.crear()
+    const nova = await store.crear()
     contribucio.value = JSON.parse(JSON.stringify(nova))
     versioOriginal.value = nova.versio
     router.replace('/contribucions/' + nova.id)

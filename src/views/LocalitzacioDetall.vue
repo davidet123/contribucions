@@ -71,10 +71,10 @@
       <div class="bloc-card">
         <div class="bloc-card-title">
           Contactes
-          <v-chip size="x-small" class="ml-2" color="grey">{{ localitzacio.contactes.length }}</v-chip>
+          <v-chip size="x-small" class="ml-2" color="grey">{{ localitzacio?.contactes?.length ?? 0 }}</v-chip>
         </div>
 
-        <div class="contactes-llista" v-if="localitzacio.contactes.length">
+        <div class="contactes-llista" v-if="localitzacio?.contactes?.length ?? 0">
           <div
             v-for="(contacte, idx) in localitzacio.contactes"
             :key="contacte.id"
@@ -215,10 +215,10 @@
       <div class="bloc-card">
         <div class="bloc-card-title">
           Material del departament
-          <v-chip size="x-small" class="ml-2" color="grey">{{ localitzacio.material.length }}</v-chip>
+          <v-chip size="x-small" class="ml-2" color="grey">{{ localitzacio?.material?.length ?? 0 }}</v-chip>
         </div>
 
-        <div class="material-llista" v-if="localitzacio.material.length">
+        <div class="material-llista" v-if="localitzacio?.material?.length ?? 0">
           <div
             v-for="(elem, idx) in localitzacio.material"
             :key="elem.id"
@@ -351,16 +351,20 @@ const transportAltreSel = computed(() =>
   localitzacio.value?.transportSenyal?.includes('altre')
 )
 
-onMounted(() => {
-  if (route.params.id && route.params.id !== 'nova') {
-    const loc = store.getLocalitzacioById(route.params.id)
+onMounted(async () => {
+  const id = route.params.id
+  if (id && id !== 'nova') {
+    if (store.localitzacions.length === 0) {
+      await store.carregarTotes()
+    }
+    const loc = store.getLocalitzacioById(id)
     if (loc) {
       localitzacio.value = JSON.parse(JSON.stringify(loc))
     } else {
       router.push('/localitzacio')
     }
   } else {
-    const nova = store.crearLocalitzacio()
+    const nova = await store.crearLocalitzacio()
     localitzacio.value = JSON.parse(JSON.stringify(nova))
     router.replace('/localitzacio/' + nova.id)
   }
@@ -397,9 +401,11 @@ function eliminarMaterial(idx) {
 
 // ── Fotos ─────────────────────────────────────────────────────────────────
 async function afegirFoto(dataUrl) {
-  store.afegirFoto(localitzacio.value.id, dataUrl)
-  const updated = store.getLocalitzacioById(localitzacio.value.id)
-  localitzacio.value.fotos = updated.fotos
+  const foto = await store.afegirFoto(localitzacio.value.id, dataUrl)
+  if (foto) {
+    // Actualitzar la llista de fotos localment sense rellegir tota la store
+    localitzacio.value.fotos = [...(localitzacio.value.fotos || []), foto]
+  }
 }
 
 function eliminarFoto(fotoId) {

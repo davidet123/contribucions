@@ -71,17 +71,17 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { ref, watch } from 'vue'
 import { imageStorage } from '@/utils/storage'
 import DiagramaContribucio from './DiagramaContribucio.vue'
 
 const props = defineProps({ contribucio: Object })
 const paginaRef = ref(null)
 
-const logoSrc = computed(() => {
-  if (!props.contribucio?.logoId) return null
-  return imageStorage.get(props.contribucio.logoId)
-})
+const logoSrc = ref(null)
+watch(() => props.contribucio?.logoId, async (id) => {
+  logoSrc.value = id ? await imageStorage.get(id) : null
+}, { immediate: true })
 
 defineExpose({ paginaRef })
 </script>

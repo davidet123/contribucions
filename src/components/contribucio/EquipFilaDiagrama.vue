@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { imageStorage } from '@/utils/storage'
 
 const props = defineProps({
@@ -90,10 +90,10 @@ const temExtern = computed(() =>
   props.equip.files.some(f => f.destiExtern && f.destiExtern !== '')
 )
 
-const logoSrc = computed(() => {
-  if (!props.equip.logoId) return null
-  return imageStorage.get(props.equip.logoId)
-})
+const logoSrc = ref(null)
+watch(() => props.equip?.logoId, async (id) => {
+  logoSrc.value = id ? await imageStorage.get(id) : null
+}, { immediate: true })
 </script>
 
 <style scoped>

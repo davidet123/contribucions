@@ -112,13 +112,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useContribucionsStore } from '@/stores/contribucions'
 import { imageStorage } from '@/utils/storage'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
-
 
 const router = useRouter()
 const store = useContribucionsStore()
@@ -140,10 +139,24 @@ const llistaFiltrada = computed(() => {
   )
 })
 
+const imagesCache = ref({})
+watch(llistaFiltrada, async (llista) => {
+  for (const c of llista) {
+    const id = c.logoId || c.imatgeLlocId
+    if (id && !imagesCache.value[id]) {
+      imagesCache.value[id] = await imageStorage.get(id)
+    }
+  }
+}, { immediate: true })
+
 function getImatge(id) {
   if (!id) return null
-  return imageStorage.get(id)
+  return imagesCache.value[id] || null
 }
+
+onMounted(() => {
+  if (store.llista.length === 0) store.carregarTotes()
+})
 
 function formatData(iso) {
   return dayjs(iso).format('DD/MM/YY HH:mm')

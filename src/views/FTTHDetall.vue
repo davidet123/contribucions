@@ -8,10 +8,20 @@
         </v-btn>
         <div>
           <h1 class="page-title">{{ localitzacio?.nom || 'Nova localització FTTH' }}</h1>
-          <p class="page-subtitle" v-if="localitzacio">ID: {{ localitzacio.id.slice(0, 8) }}...</p>
+          <p class="page-subtitle" v-if="localitzacio?.id">ID: {{ localitzacio.id.slice(0, 8) }}...</p>
         </div>
       </div>
       <div class="header-actions">
+        <v-btn
+          v-if="localitzacio?.id"
+          variant="outlined"
+          color="error"
+          size="small"
+          prepend-icon="mdi-delete-outline"
+          @click="confirmarEliminar"
+        >
+          Eliminar
+        </v-btn>
         <v-btn color="primary" prepend-icon="mdi-content-save-outline" @click="guardar" size="small">
           Guardar
         </v-btn>
@@ -149,6 +159,22 @@
       :instalador-actual="localitzacio?.instaladorId ? getInstaladorById(localitzacio.instaladorId) : null"
       @seleccionar="onSeleccionarInstalador"
     />
+
+    <!-- Dialog confirmar eliminar -->
+    <v-dialog v-model="dialogEliminar" max-width="400">
+      <v-card>
+        <v-card-title class="text-h6 pa-6 pb-2">Eliminar localització FTTH</v-card-title>
+        <v-card-text>
+          Estàs segur que vols eliminar <strong>{{ localitzacio?.nom || 'aquesta localització' }}</strong>?
+          S'eliminaran totes les fotos i dades associades. Aquesta acció no es pot desfer.
+        </v-card-text>
+        <v-card-actions class="pa-4 pt-0">
+          <v-spacer />
+          <v-btn variant="text" @click="dialogEliminar = false">Cancel·lar</v-btn>
+          <v-btn color="error" @click="ferEliminar">Eliminar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -174,15 +200,22 @@ const tipusOptions = [
 ]
 
 onMounted(async () => {
-  if (route.params.id && route.params.id !== 'nova') {
-    const loc = store.getLocalitzacioById(route.params.id)
+  const id = route.params.id
+  if (id && id !== 'nova') {
+    // Pot ser que la store encara no hagi carregat (Firestore async).
+    // Intentem carregar si la llista és buida.
+    if (store.localitzacions.length === 0) {
+      await store.carregarTot()
+    }
+    const loc = store.getLocalitzacioById(id)
     if (loc) {
       localitzacio.value = JSON.parse(JSON.stringify(loc))
     } else {
       router.push('/ftth')
     }
   } else {
-    const nova = store.crearLocalitzacio()
+    // Crear nova i esperar l'await (crearLocalitzacio és async amb Firestore)
+    const nova = await store.crearLocalitzacio()
     localitzacio.value = JSON.parse(JSON.stringify(nova))
     router.replace('/ftth/' + nova.id)
   }
@@ -238,9 +271,11 @@ function guardarSpeedResult(result) {
 }
 
 async function afegirFoto(dataUrl) {
-  store.afegirFoto(localitzacio.value.id, dataUrl)
-  const updated = store.getLocalitzacioById(localitzacio.value.id)
-  localitzacio.value.fotos = updated.fotos
+  const foto = await store.afegirFoto(localitzacio.value.id, dataUrl)
+  if (foto) {
+    // Actualitzar la llista de fotos localment sense rellegir tota la store
+    localitzacio.value.fotos = [...(localitzacio.value.fotos || []), foto]
+  }
 }
 
 function eliminarFoto(fotoId) {
@@ -259,6 +294,18 @@ function guardar() {
     return
   }
   store.actualitzarLocalitzacio(localitzacio.value.id, localitzacio.value)
+  router.push('/ftth')
+}
+
+const dialogEliminar = ref(false)
+
+function confirmarEliminar() {
+  dialogEliminar.value = true
+}
+
+async function ferEliminar() {
+  await store.eliminarLocalitzacio(localitzacio.value.id)
+  dialogEliminar.value = false
   router.push('/ftth')
 }
 </script>
