@@ -1,3 +1,4 @@
+// src/main.js
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { createVuetify } from 'vuetify'
@@ -9,6 +10,7 @@ import router from './router'
 import App from './App.vue'
 import './assets/main.css'
 
+// ── Vuetify ───────────────────────────────────────────────────────────────────
 const vuetify = createVuetify({
   components,
   directives,
@@ -46,10 +48,33 @@ const vuetify = createVuetify({
   }
 })
 
+// ── App ───────────────────────────────────────────────────────────────────────
 const pinia = createPinia()
 const app = createApp(App)
 
 app.use(pinia)
 app.use(router)
 app.use(vuetify)
+
+// ── Càrrega inicial de dades des de Firestore ─────────────────────────────────
+// S'importa dins de main.js per garantir que Pinia ja és actiu quan es crida.
+// Cada store carrega les seves dades una sola vegada en iniciar l'app.
+
 app.mount('#app')
+
+// Carregar dades en background després del mount per no bloquejar el render
+import('./stores/retransmissions').then(({ useRetransmissionsStore }) => {
+  useRetransmissionsStore().carregarTotes()
+})
+import('./stores/contribucions').then(({ useContribucionsStore }) => {
+  useContribucionsStore().carregarTotes()
+})
+import('./stores/ftth').then(({ useFtthStore }) => {
+  useFtthStore().carregarTot()
+})
+import('./stores/localitzacio').then(({ useLocalitzacioStore }) => {
+  useLocalitzacioStore().carregarTotes()
+})
+import('./stores/cataleg').then(({ useCatalegStore }) => {
+  useCatalegStore().carregarTot()
+})

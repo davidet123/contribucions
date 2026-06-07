@@ -7,6 +7,27 @@
 
     <div class="sidebar-divider" />
 
+    <!-- Inici -->
+    <router-link to="/" class="nav-item" :class="{ active: $route.path === '/' }" @click="tancarDrawer">
+      <v-icon size="18">mdi-home-outline</v-icon>
+      Inici
+    </router-link>
+
+    <div class="sidebar-divider" />
+
+    <!-- Nav: Retransmissions -->
+    <div class="sidebar-section-label">Retransmissions</div>
+    <router-link to="/retransmissions" class="nav-item" :class="{ active: $route.path === '/retransmissions' }" @click="tancarDrawer">
+      <v-icon size="18">mdi-broadcast</v-icon>
+      Totes les retransmissions
+    </router-link>
+    <router-link to="/retransmissions/nova" class="nav-item" :class="{ active: $route.path === '/retransmissions/nova' }" @click="tancarDrawer">
+      <v-icon size="18">mdi-plus-circle-outline</v-icon>
+      Nova retransmissió
+    </router-link>
+
+    <div class="sidebar-divider" />
+
     <!-- Nav principal: Contribucions -->
     <div class="sidebar-section-label">Contribucions</div>
     <router-link to="/contribucions" class="nav-item" :class="{ active: $route.path === '/contribucions' }" @click="tancarDrawer">
@@ -76,7 +97,7 @@
 
     <!-- Footer -->
     <div class="sidebar-footer">
-      <div class="sidebar-footer-text">À Mèdia · v1.0</div>
+      <div class="sidebar-footer-text">À Mèdia · v0.9</div>
     </div>
   </nav>
 </template>

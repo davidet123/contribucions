@@ -3,8 +3,31 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 const routes = [
   {
     path: '/',
-    redirect: '/contribucions'
+    name: 'Inici',
+    component: () => import('@/views/Inici.vue'),
+    meta: { title: 'Inici' }
   },
+
+  // ========== RETRANSMISSIONS ==========
+  {
+    path: '/retransmissions',
+    name: 'RetransmissionsLlista',
+    component: () => import('@/views/RetransmissionsLlista.vue'),
+    meta: { title: 'Retransmissions' }
+  },
+  {
+    path: '/retransmissions/nova',
+    name: 'NovaRetransmissio',
+    component: () => import('@/views/RetransmissioDetall.vue'),
+    meta: { title: 'Nova retransmissió' }
+  },
+  {
+    path: '/retransmissions/:id',
+    name: 'EditarRetransmissio',
+    component: () => import('@/views/RetransmissioDetall.vue'),
+    meta: { title: 'Editar retransmissió' }
+  },
+
   // ========== CONTRIBUCIONS ==========
   {
     path: '/contribucions',
@@ -30,13 +53,13 @@ const routes = [
     path: '/cataleg/equips',
     name: 'CatalegEquips',
     component: () => import('@/views/CatalegEquips.vue'),
-    meta: { title: 'Catàleg d\'equips' }
+    meta: { title: "Catàleg d'equips" }
   },
   {
     path: '/cataleg/tipus-equip',
     name: 'CatalegTipusEquip',
     component: () => import('@/views/CatalegTipusEquip.vue'),
-    meta: { title: 'Tipus d\'equip' }
+    meta: { title: "Tipus d'equip" }
   },
   {
     path: '/cataleg/cct',

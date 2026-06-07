@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import {
   collection, doc, getDocs, setDoc,
-  deleteDoc, query, orderBy,
+  deleteDoc, query, orderBy, where,
 } from 'firebase/firestore'
 import { db } from '@/services/firebase'
 import { imageStorage } from '@/utils/storage'
@@ -63,12 +63,39 @@ export const useFtthStore = defineStore('ftth', () => {
     carregant.value = true
     error.value = null
     try {
-      const [locSnap, insSnap] = await Promise.all([
-        getDocs(query(collection(db, COL_LOC), orderBy('updatedAt', 'desc'))),
-        getDocs(collection(db, COL_INS)),
-      ])
-      localitzacions.value = locSnap.docs.map(d => ({ ...d.data(), id: d.id }))
-      instaladors.value = insSnap.docs.map(d => ({ ...d.data(), id: d.id }))
+      const lastSync = localStorage.getItem('ftth_lastSync')
+
+      if (!lastSync) {
+        // Primera càrrega: tot
+        const [locSnap, insSnap] = await Promise.all([
+          getDocs(query(collection(db, COL_LOC), orderBy('updatedAt', 'desc'))),
+          getDocs(collection(db, COL_INS)),
+        ])
+        localitzacions.value = locSnap.docs.map(d => ({ ...d.data(), id: d.id }))
+        instaladors.value = insSnap.docs.map(d => ({ ...d.data(), id: d.id }))
+      } else {
+        // Càrregues posteriors: només localitzacions modificades (instaladors canvien poc)
+        const locSnap = await getDocs(
+          query(
+            collection(db, COL_LOC),
+            where('updatedAt', '>', lastSync),
+            orderBy('updatedAt', 'desc')
+          )
+        )
+        const nous = locSnap.docs.map(d => ({ ...d.data(), id: d.id }))
+        for (const nouDoc of nous) {
+          const idx = localitzacions.value.findIndex(l => l.id === nouDoc.id)
+          if (idx !== -1) localitzacions.value[idx] = nouDoc
+          else localitzacions.value.unshift(nouDoc)
+        }
+        // Instaladors: recarregar només si la llista és buida
+        if (instaladors.value.length === 0) {
+          const insSnap = await getDocs(collection(db, COL_INS))
+          instaladors.value = insSnap.docs.map(d => ({ ...d.data(), id: d.id }))
+        }
+      }
+
+      localStorage.setItem('ftth_lastSync', new Date().toISOString())
     } catch (err) {
       console.error('Error carregant FTTH:', err)
       error.value = err.message
