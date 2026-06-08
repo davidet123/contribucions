@@ -103,6 +103,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useContribucionsStore } from '@/stores/contribucions'
+import { useCatalegStore } from '@/stores/cataleg'
 import SeccioCapcalera from '@/components/contribucio/SeccioCapcalera.vue'
 import SeccioEquips from '@/components/contribucio/SeccioEquips.vue'
 import SeccioSenyals from '@/components/contribucio/SeccioSenyals.vue'
@@ -115,6 +116,7 @@ import PaginaPDF from '@/components/contribucio/PaginaPDF.vue'
 const route = useRoute()
 const router = useRouter()
 const store = useContribucionsStore()
+const cataleg = useCatalegStore()
 
 const contribucio = ref(null)
 const saved = ref(false)
@@ -124,6 +126,12 @@ const versioOriginal = ref(null)
 
 onMounted(async () => {
   const id = route.params.id
+
+  // ✅ Esperar el catàleg SIEMPRE, antes de todo
+  if (cataleg.equips.length === 0) {
+    await cataleg.carregarTot()
+  }
+
   if (id && id !== 'nova') {
     if (store.llista.length === 0) {
       await store.carregarTotes()

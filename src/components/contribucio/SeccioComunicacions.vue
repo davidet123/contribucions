@@ -187,19 +187,13 @@ const dialogNouRecurs = ref(false)
 const liniaPerRecurs = ref(null)
 
 // Logos
+// logoId ara conté directament la URL de Cloudinary.
+// El cache local serveix per evitar re-renders innecessaris.
 const logoInputs = ref({})
-const logosCache = ref({})
-
-onMounted(async () => {
-  for (const grup of comunicacionsLocal.value) {
-    if (grup.logoId) {
-      logosCache.value[grup.id] = await imageStorage.get(grup.logoId)
-    }
-  }
-})
 
 function getLogoSrc(grup) {
-  return logosCache.value[grup.id] || null
+  // logoId és la URL directa de Cloudinary
+  return grup.logoId || null
 }
 function triggerLogoUpload(grup) {
   logoInputs.value[grup.id]?.click()
@@ -208,16 +202,13 @@ async function handleLogoChange(e, grup) {
   const file = e.target.files[0]
   if (!file) return
   const b64 = await fileToBase64(file)
-  const id = 'com_logo_' + grup.id
-  const url = await imageStorage.save(id, b64)
-  grup.logoId = id
-  logosCache.value[grup.id] = url || b64
+  const url = await imageStorage.save(null, b64)
+  // Guardem la URL directament al logoId
+  grup.logoId = url || b64
   emitUpdate()
 }
-async function esborrarLogo(grup) {
-  if (grup.logoId) await imageStorage.remove(grup.logoId)
+function esborrarLogo(grup) {
   grup.logoId = null
-  delete logosCache.value[grup.id]
   emitUpdate()
 }
 

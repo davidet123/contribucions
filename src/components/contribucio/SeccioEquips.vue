@@ -317,7 +317,7 @@ const direccions = [
 
 const equipsCataleg = computed(() =>
   cataleg.equips.map(e => {
-    const tipus = cataleg.tipusEquipMap.value?.[e.tipusId]
+    const tipus = cataleg.tipusEquipMap[e.tipusId]
     return { ...e, nomComplet: `${e.nom}${tipus ? ' (' + tipus.nom + ')' : ''}` }
   })
 )
@@ -326,7 +326,7 @@ const destinsCCTOpcions = computed(() => cataleg.destinsCCT)
 
 function getCategoriaIcon(instancia) {
   if (!instancia.equipId) return 'mdi-server-outline'
-  const equip = cataleg.equipMap.value?.[instancia.equipId]
+  const equip = cataleg.equipMap[instancia.equipId]
   const tipus = equip ? cataleg.tipusEquipMap[equip.tipusId] : null
   const cats = { nimbra: 'mdi-server', makito_tx: 'mdi-video-wireless', makito_rx: 'mdi-video-wireless-outline', mochila_4g: 'mdi-backpack', dsng: 'mdi-satellite-uplink', streamhub: 'mdi-hub', tieline: 'mdi-microphone', proveidor_extern: 'mdi-antenna' }
   return cats[tipus?.categoria] || 'mdi-server-outline'
@@ -341,7 +341,7 @@ function getEquipNom(instancia) {
 
 // function esProveidor(instancia) {
 //   if (!instancia.equipId) return false
-//   const equip = cataleg.equipMap.value?.[instancia.equipId]
+//   const equip = cataleg.equipMap[instancia.equipId]
 //   const tipus = equip ? cataleg.tipusEquipMap[equip.tipusId] : null
 //   return tipus?.categoria === 'proveidor_extern'
 // }
@@ -351,8 +351,8 @@ function esProveidor(instancia) {
   if (instancia.nomProveidor && !instancia.equipId) return true
   
   if (!instancia.equipId) return false
-  const equip = cataleg.equipMap.value?.[instancia.equipId]
-  const tipus = equip ? cataleg.tipusEquipMap.value?.[equip.tipusId] : null
+  const equip = cataleg.equipMap[instancia.equipId]
+  const tipus = equip ? cataleg.tipusEquipMap[equip.tipusId] : null
   return tipus?.categoria === 'proveidor_extern'
 }
 
@@ -373,7 +373,8 @@ function obrirDialogNouDesti(via) {
 
 function confirmarAfegirEquip() {
   if (!equipSeleccionat.value) return
-  const equip = cataleg.equipMap.value?.[equipSeleccionat.value]
+
+  const equip = cataleg.equipMap[equipSeleccionat.value]
   const tipus = equip ? cataleg.tipusEquipMap[equip.tipusId] : null
   const vies = (tipus?.viesDefecte || []).map(v => ({
     id: uuidv4(), numero: v.numero, direccio: v.direccio,
@@ -392,8 +393,8 @@ function confirmarAfegirEquip() {
 // function onEquipChange(instancia, equipId) {
 //   instancia.equipId = equipId
 //   if (equipId) {
-//     const equip = cataleg.equipMap.value?.[equipId]
-//     const tipus = equip ? cataleg.tipusEquipMap.value?.[equip.tipusId] : null
+//     const equip = cataleg.equipMap[equipId]
+//     const tipus = equip ? cataleg.tipusEquipMap[equip.tipusId] : null
 //     instancia.vies = (tipus?.viesDefecte || []).map(v => ({
 //       id: uuidv4(), numero: v.numero, direccio: v.direccio,
 //       etiqueta: v.etiqueta, destiCCTId: null, destiCCTNom: '', urlExterna: '', notes: ''
@@ -410,8 +411,8 @@ function onEquipChange(instancia, equipId) {
   instancia.equipId = equipId
   
   if (equipId) {
-    const equip = cataleg.equipMap.value?.[equipId]
-    const tipus = equip ? cataleg.tipusEquipMap.value?.[equip.tipusId] : null
+    const equip = cataleg.equipMap[equipId]
+    const tipus = equip ? cataleg.tipusEquipMap[equip.tipusId] : null
     
     // Solo resetear vías, mantener tecnología si es compatible
     instancia.vies = (tipus?.viesDefecte || []).map(v => ({

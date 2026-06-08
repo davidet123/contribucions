@@ -77,8 +77,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { imageStorage } from '@/utils/storage'
+import { computed } from 'vue'
 
 const props = defineProps({
   equip: { type: Object, required: true },
@@ -90,10 +89,8 @@ const temExtern = computed(() =>
   props.equip.files.some(f => f.destiExtern && f.destiExtern !== '')
 )
 
-const logoSrc = ref(null)
-watch(() => props.equip?.logoId, async (id) => {
-  logoSrc.value = id ? await imageStorage.get(id) : null
-}, { immediate: true })
+// logoId conté directament la URL de Cloudinary
+const logoSrc = computed(() => props.equip?.logoId || null)
 </script>
 
 <style scoped>

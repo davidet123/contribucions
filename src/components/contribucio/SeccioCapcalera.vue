@@ -137,12 +137,13 @@ const inputLloc = ref(null)
 const logoPreview    = ref(null)
 const imatgePreview  = ref(null)
 
-onMounted(async () => {
+onMounted(() => {
+  // logoId i imatgeLlocId ara contenen directament la URL de Cloudinary
   if (props.contribucio.logoId) {
-    logoPreview.value = await imageStorage.get(props.contribucio.logoId)
+    logoPreview.value = props.contribucio.logoId
   }
   if (props.contribucio.imatgeLlocId) {
-    imatgePreview.value = await imageStorage.get(props.contribucio.imatgeLlocId)
+    imatgePreview.value = props.contribucio.imatgeLlocId
   }
 })
 
@@ -155,10 +156,10 @@ async function onLogoChange(e) {
   const file = e.target.files?.[0]
   if (!file) return
   const b64 = await fileToBase64(file)
-  const id = props.contribucio.id + '_logo'
-  const url = await imageStorage.save(id, b64)
-  logoPreview.value = url || b64  // fallback a b64 si falla
-  emit('update', { logoId: id })
+  const url = await imageStorage.save(null, b64)
+  logoPreview.value = url || b64
+  // Guardem la URL directament (no una clau arbitrària)
+  emit('update', { logoId: url || b64 })
   e.target.value = ''
 }
 
@@ -166,21 +167,18 @@ async function onLlocChange(e) {
   const file = e.target.files?.[0]
   if (!file) return
   const b64 = await fileToBase64(file)
-  const id = props.contribucio.id + '_lloc'
-  const url = await imageStorage.save(id, b64)
+  const url = await imageStorage.save(null, b64)
   imatgePreview.value = url || b64
-  emit('update', { imatgeLlocId: id })
+  emit('update', { imatgeLlocId: url || b64 })
   e.target.value = ''
 }
 
-async function eliminarLogo() {
-  await imageStorage.remove(props.contribucio.logoId)
+function eliminarLogo() {
   logoPreview.value = null
   emit('update', { logoId: null })
 }
 
-async function eliminarImatgeLloc() {
-  await imageStorage.remove(props.contribucio.imatgeLlocId)
+function eliminarImatgeLloc() {
   imatgePreview.value = null
   emit('update', { imatgeLlocId: null })
 }

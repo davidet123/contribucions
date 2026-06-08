@@ -75,9 +75,8 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useCatalegStore } from '@/stores/cataleg'
-import { imageStorage } from '@/utils/storage'
 import EquipFilaDiagrama from './EquipFilaDiagrama.vue'
 
 const props = defineProps({
@@ -87,10 +86,8 @@ const props = defineProps({
 
 const cataleg = useCatalegStore()
 
-const imatgeLloc = ref(null)
-watch(() => props.contribucio?.imatgeLlocId, async (id) => {
-  imatgeLloc.value = id ? await imageStorage.get(id) : null
-}, { immediate: true })
+// imatgeLlocId conté directament la URL de Cloudinary
+const imatgeLloc = computed(() => props.contribucio?.imatgeLlocId || null)
 
 function getNomEquip(instancia) {
   if (instancia.nomPersonalitzat) return instancia.nomPersonalitzat
