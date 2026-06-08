@@ -31,8 +31,8 @@ const emit = defineEmits(['update:modelValue', 'creat'])
 const cataleg = useCatalegStore()
 const form = ref({ nom: '', tipus: 'um' })
 
-function crear() {
-  const desti = cataleg.addDestiCCT({ ...form.value })
+async function crear() {
+  const desti = await cataleg.addDestiCCT({ ...form.value })
   emit('creat', desti)
   emit('update:modelValue', false)
   form.value = { nom: '', tipus: 'um' }

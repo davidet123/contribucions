@@ -77,12 +77,12 @@ const viesPreview = computed(() => {
   return tipus?.viesDefecte || []
 })
 
-function desar() {
+async function desar() {
   if (props.equipEditat) {
-    cataleg.updateEquip(props.equipEditat.id, { ...form.value })
+    await cataleg.updateEquip(props.equipEditat.id, { ...form.value })
     emit('editat', { ...props.equipEditat, ...form.value })
   } else {
-    const equip = cataleg.addEquip({ ...form.value })
+    const equip = await cataleg.addEquip({ ...form.value })
     emit('creat', equip)
   }
   tancar()

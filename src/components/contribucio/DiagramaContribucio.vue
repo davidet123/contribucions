@@ -146,6 +146,7 @@ const equipsContribucio = computed(() => {
       id: instancia.id,
       nom: getNomEquip(instancia),
       connexio: getConnexioLabel(instancia),
+      notes: instancia.notes || '',
       files,
     })
   }
@@ -171,6 +172,7 @@ const equipsContribucio = computed(() => {
       id: bloc.id,
       nom: bloc.nom,
       connexio: '',
+      notes: '',
       files,
     })
   }

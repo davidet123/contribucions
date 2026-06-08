@@ -14,6 +14,7 @@
     <div class="grid-celda celda-titol-equip" style="grid-row: 1; grid-column: 1;">
       <span class="equip-nom">{{ equip.nom }}</span>
       <span v-if="equip.connexio" class="equip-connexio">{{ equip.connexio }}</span>
+      <span v-if="equip.notes" class="equip-notes">{{ equip.notes }}</span>
     </div>
     <!-- Logo del grup (si n'hi ha) -->
     <div style="grid-row: 1; grid-column: 2;"></div>
@@ -84,6 +85,8 @@ const props = defineProps({
   franges: { type: Array, default: () => [] },
 })
 
+console.log(props.equip)
+
 // Hi ha destí extern si alguna fila té destiExtern amb valor
 const temExtern = computed(() =>
   props.equip.files.some(f => f.destiExtern && f.destiExtern !== '')
@@ -147,6 +150,19 @@ const logoSrc = computed(() => props.equip?.logoId || null)
   font-size: 7.5px;
   color: #6B7280;
   font-weight: 600;
+}
+
+.equip-notes {
+  font-family: 'DM Mono', monospace;
+  font-size: 7px;
+  color: #9CA3AF;
+  font-style: italic;
+  line-height: 1.3;
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 /* Cel·la via */

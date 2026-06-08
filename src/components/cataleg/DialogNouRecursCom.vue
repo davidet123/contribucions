@@ -65,13 +65,13 @@ const ubicacionsOpcions = computed(() => {
   return Array.from(fixes.entries()).map(([value, label]) => ({ value, label }))
 })
 
-function crear() {
+async function crear() {
   // El combobox pot retornar un objecte o un string
   const ubicacio = typeof form.value.ubicacio === 'object'
     ? form.value.ubicacio.value
     : form.value.ubicacio
 
-  const recurs = cataleg.addRecursCom({ ...form.value, ubicacio })
+  const recurs = await cataleg.addRecursCom({ ...form.value, ubicacio })
   emit('creat', recurs)
   emit('update:modelValue', false)
   form.value = { nom: '', tipus: 'codec_ip', ubicacio: props.ubicacioInicial || 'cct', extensio: '' }
