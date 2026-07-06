@@ -13,7 +13,7 @@ const COL = 'contribucions'
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
-function novaContribucio(base = {}) {
+export function novaContribucio(base = {}) {
   return {
     id: uuidv4(),
     nomPrograma: '',
@@ -155,6 +155,14 @@ export const useContribucionsStore = defineStore('contribucions', () => {
 
 
   // ── CRUD ─────────────────────────────────────────────────────────────────
+  /**
+   * Crea un objecte local sense escriure a Firestore.
+   * Usar en obrir un editor nou; persistir amb crear() en guardar.
+   */
+  function crearLocal(base = {}) {
+    return novaContribucio(base)
+  }
+
   async function crear(base = {}) {
     const nova = novaContribucio(base)
     const docRef = doc(db, COL, nova.id)
@@ -297,7 +305,7 @@ export const useContribucionsStore = defineStore('contribucions', () => {
   return {
     llista, llistaOrdenada, carregant, error,
     carregarTotes,
-    crear, duplicar, actualitzar, eliminar, getById,
+    crearLocal, crear, duplicar, actualitzar, eliminar, getById,
     afegirEquip, eliminarEquip,
     afegirSenyal, eliminarSenyal,
     afegirRoutingCCT, eliminarRoutingCCT,

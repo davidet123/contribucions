@@ -69,7 +69,6 @@
               v-model="localitzacio.ip"
               label="IP"
               placeholder="Detectar automàticament"
-              readonly
             />
           </v-col>
           <v-col cols="12" sm="4" md="2" class="d-flex align-center">
@@ -160,6 +159,13 @@
       @seleccionar="onSeleccionarInstalador"
     />
 
+    <!-- Dialog canvis sense desar -->
+    <DirtyGuardDialog
+      :model-value="pendingNavigation !== null"
+      @confirm="confirmLeave"
+      @cancel="cancelLeave"
+    />
+
     <!-- Dialog confirmar eliminar -->
     <v-dialog v-model="dialogEliminar" max-width="400">
       <v-card>
@@ -179,13 +185,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useRoute, useRouter } from 'vue-router'
 import { useFtthStore } from '@/stores/ftth'
 import SpeedTest from '@/components/ftth/SpeedTest.vue'
 import FotoUploader from '@/components/ftth/FotoUploader.vue'
 import DialogInstalador from '@/components/ftth/DialogInstalador.vue'
+import DirtyGuardDialog from '@/components/shared/DirtyGuardDialog.vue'
+import { useDirtyGuard } from '@/composables/useDirtyGuard'
 
 const route = useRoute()
 const router = useRouter()
@@ -194,6 +202,13 @@ const store = useFtthStore()
 const localitzacio = ref(null)
 const detectantIP = ref(false)
 const dialogInstalador = ref(false)
+
+const { isDirty, pendingNavigation, markDirty, markClean, confirmLeave, cancelLeave } = useDirtyGuard()
+
+// Detecta qualsevol canvi al formulari un cop carregat
+watch(localitzacio, (nouValor, valorAntic) => {
+  if (valorAntic !== null && nouValor !== null) markDirty()
+}, { deep: true })
 
 const tipusOptions = [
   { value: 'permanent', label: 'Permanent' },
@@ -320,6 +335,7 @@ async function guardar() {
     alert('El nom de la localització és obligatori')
     return
   }
+  markClean()
   if (isNou.value) {
     await store.crearLocalitzacio(localitzacio.value)
   } else {
@@ -335,6 +351,7 @@ function confirmarEliminar() {
 }
 
 async function ferEliminar() {
+  markClean()
   await store.eliminarLocalitzacio(localitzacio.value.id)
   dialogEliminar.value = false
   router.push('/ftth')

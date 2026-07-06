@@ -230,7 +230,7 @@ async function ferEliminar() {
 <style scoped>
 .page-wrapper {
   padding: 32px 40px;
-  max-width: 900px;
+  max-width: 1700px;
 }
 
 .page-header {

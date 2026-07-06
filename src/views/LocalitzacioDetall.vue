@@ -297,6 +297,13 @@
       </div>
     </div>
 
+    <!-- Dialog canvis sense desar -->
+    <DirtyGuardDialog
+      :model-value="pendingNavigation !== null"
+      @confirm="confirmLeave"
+      @cancel="cancelLeave"
+    />
+
     <!-- Dialog confirmar eliminació -->
     <v-dialog v-model="dialogEliminar" max-width="400">
       <v-card>
@@ -316,11 +323,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLocalitzacioStore } from '@/stores/localitzacio'
 import { v4 as uuidv4 } from 'uuid'
 import FotoUploader from '@/components/ftth/FotoUploader.vue'
+import DirtyGuardDialog from '@/components/shared/DirtyGuardDialog.vue'
+import { useDirtyGuard } from '@/composables/useDirtyGuard'
 
 const route = useRoute()
 const router = useRouter()
@@ -328,6 +337,12 @@ const store = useLocalitzacioStore()
 
 const localitzacio = ref(null)
 const dialogEliminar = ref(false)
+
+const { isDirty, pendingNavigation, markDirty, markClean, confirmLeave, cancelLeave } = useDirtyGuard()
+
+watch(localitzacio, (nouValor, valorAntic) => {
+  if (valorAntic !== null && nouValor !== null) markDirty()
+}, { deep: true })
 
 const transportOpcions = [
   { value: 'ftth-propia', label: 'FTTH pròpia' },
@@ -444,6 +459,7 @@ async function guardar() {
     alert('El nom de la localització és obligatori')
     return
   }
+  markClean()
   if (isNou.value) {
     await store.crearLocalitzacio(localitzacio.value)
   } else {
@@ -457,6 +473,7 @@ function confirmarEliminar() {
 }
 
 function eliminar() {
+  markClean()
   store.eliminarLocalitzacio(localitzacio.value.id)
   router.push('/localitzacio')
 }

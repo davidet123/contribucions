@@ -59,6 +59,35 @@
       </div>
     </div>
 
+    <!-- Dialog canvis sense desar -->
+    <DirtyGuardDialog
+      :model-value="pendingNavigation !== null"
+      @confirm="confirmLeave"
+      @cancel="cancelLeave"
+    />
+
+    <!-- Dialog recuperar esborrany -->
+    <v-dialog v-model="dialogDraft" max-width="460" persistent>
+      <v-card>
+        <v-card-title class="pa-6 pb-2">
+          <v-icon color="info" class="mr-2">mdi-content-save-edit-outline</v-icon>
+          Esborrany trobat
+        </v-card-title>
+        <v-card-text>
+          Hi ha canvis no desats d'aquest document guardats localment
+          <span v-if="draftSavedAt" class="draft-date">
+            ({{ new Date(draftSavedAt).toLocaleString('ca') }})
+          </span>.
+          Vols recuperar-los?
+        </v-card-text>
+        <v-card-actions class="pa-4 pt-0">
+          <v-btn variant="text" color="error" @click="descartarDraft">Descartar</v-btn>
+          <v-spacer />
+          <v-btn color="primary" @click="recuperarDraft">Recuperar esborrany</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Version warning dialog -->
     <v-dialog v-model="dialogVersio" max-width="460">
       <v-card>
@@ -102,7 +131,8 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useContribucionsStore } from '@/stores/contribucions'
+import { useContribucionsStore, novaContribucio } from '@/stores/contribucions'
+import { useEditorDraft } from '@/composables/useEditorDraft'
 import { useCatalegStore } from '@/stores/cataleg'
 import SeccioCapcalera from '@/components/contribucio/SeccioCapcalera.vue'
 import SeccioEquips from '@/components/contribucio/SeccioEquips.vue'
@@ -112,6 +142,8 @@ import SeccioComunicacions from '@/components/contribucio/SeccioComunicacions.vu
 import SeccioContactes from '@/components/contribucio/SeccioContactes.vue'
 import DiagramaContribucio from '@/components/contribucio/DiagramaContribucio.vue'
 import PaginaPDF from '@/components/contribucio/PaginaPDF.vue'
+import DirtyGuardDialog from '@/components/shared/DirtyGuardDialog.vue'
+import { useDirtyGuard } from '@/composables/useDirtyGuard'
 
 const route = useRoute()
 const router = useRouter()
@@ -123,6 +155,11 @@ const saved = ref(false)
 const dialogVersio = ref(false)
 const mostrarPreview = ref(false)
 const versioOriginal = ref(null)
+
+const { pendingNavigation, markDirty, markClean, confirmLeave, cancelLeave } = useDirtyGuard()
+const draft = useEditorDraft('contribucio')
+const dialogDraft = ref(false)
+const draftSavedAt = ref(null)
 
 onMounted(async () => {
   const id = route.params.id
@@ -138,16 +175,30 @@ onMounted(async () => {
     }
     const c = store.getById(id)
     if (c) {
-      contribucio.value = JSON.parse(JSON.stringify(c))
+      // Comprovem si hi ha un esborrany pendent per aquest document
+      const { exists, savedAt } = draft.hasDraft(id)
+      if (exists) {
+        draftSavedAt.value = savedAt
+        dialogDraft.value = true
+        // Carreguem l'original mentre l'usuari decideix
+        contribucio.value = JSON.parse(JSON.stringify(c))
+      } else {
+        contribucio.value = JSON.parse(JSON.stringify(c))
+      }
       versioOriginal.value = c.versio
     } else {
       router.push('/contribucions')
     }
   } else {
-    const nova = await store.crear()
-    contribucio.value = JSON.parse(JSON.stringify(nova))
-    versioOriginal.value = nova.versio
-    router.replace('/contribucions/' + nova.id)
+    // Document nou: crear objecte local sense escriure a Firestore
+    contribucio.value = novaContribucio()
+    versioOriginal.value = contribucio.value.versio
+    // Comprovem si hi ha esborrany d'una sessió anterior (mateixa id temporal)
+    const { exists, savedAt } = draft.hasDraft(contribucio.value.id)
+    if (exists) {
+      draftSavedAt.value = savedAt
+      dialogDraft.value = true
+    }
   }
 })
 
@@ -155,6 +206,8 @@ function handleUpdate(patch) {
   if (!contribucio.value) return
   Object.assign(contribucio.value, patch)
   saved.value = false
+  markDirty()
+  draft.save(contribucio.value.id, contribucio.value)
 }
 
 function guardar() {
@@ -168,10 +221,19 @@ function guardar() {
   fer_guardar()
 }
 
-function fer_guardar() {
-  store.actualitzar(contribucio.value.id, contribucio.value)
+async function fer_guardar() {
+  const existent = store.getById(contribucio.value.id)
+  if (existent) {
+    await store.actualitzar(contribucio.value.id, contribucio.value)
+  } else {
+    // Document nou: primer cop que es desa a Firestore
+    await store.crear(contribucio.value)
+    router.replace('/contribucions/' + contribucio.value.id)
+  }
+  draft.clear(contribucio.value.id)
   versioOriginal.value = contribucio.value.versio
   saved.value = true
+  markClean()
   dialogVersio.value = false
 }
 
@@ -182,6 +244,20 @@ function incrementarVersio() {
 
 function sobreescriure() {
   fer_guardar()
+}
+
+function recuperarDraft() {
+  const saved = draft.load(contribucio.value.id)
+  if (saved) {
+    contribucio.value = saved
+    markDirty()
+  }
+  dialogDraft.value = false
+}
+
+function descartarDraft() {
+  draft.clear(contribucio.value.id)
+  dialogDraft.value = false
 }
 
 async function exportarPDF() {

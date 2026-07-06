@@ -181,6 +181,13 @@
 
     </div>
 
+    <!-- Dialog canvis sense desar -->
+    <DirtyGuardDialog
+      :model-value="pendingNavigation !== null"
+      @confirm="confirmLeave"
+      @cancel="cancelLeave"
+    />
+
     <!-- Dialog eliminar -->
     <v-dialog v-model="dialogEliminar" max-width="400">
       <v-card>
@@ -200,7 +207,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRetransmissionsStore, ESTATS } from '@/stores/retransmissions'
 import { useContribucionsStore } from '@/stores/contribucions'
@@ -208,6 +215,8 @@ import { useFtthStore } from '@/stores/ftth'
 import { useLocalitzacioStore } from '@/stores/localitzacio'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
+import DirtyGuardDialog from '@/components/shared/DirtyGuardDialog.vue'
+import { useDirtyGuard } from '@/composables/useDirtyGuard'
 
 const route   = useRoute()
 const router  = useRouter()
@@ -218,8 +227,13 @@ const storeLoc   = useLocalitzacioStore()
 
 const retransmissio = ref(null)
 const dialogEliminar = ref(false)
-
 const isNou = ref(false)
+
+const { isDirty, pendingNavigation, markDirty, markClean, confirmLeave, cancelLeave } = useDirtyGuard()
+
+watch(retransmissio, (nouValor, valorAntic) => {
+  if (valorAntic !== null && nouValor !== null) markDirty()
+}, { deep: true })
 
 onMounted(async () => {
   await Promise.all([
@@ -281,6 +295,7 @@ async function guardar() {
     alert('El nom de la retransmissió és obligatori')
     return
   }
+  markClean()
   if (isNou.value) {
     await store.crear(retransmissio.value)
   } else {
@@ -290,6 +305,7 @@ async function guardar() {
 }
 
 async function ferEliminar() {
+  markClean()
   await store.eliminar(retransmissio.value.id)
   dialogEliminar.value = false
   router.push('/retransmissions')
