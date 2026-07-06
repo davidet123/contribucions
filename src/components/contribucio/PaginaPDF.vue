@@ -36,8 +36,9 @@
               <td>{{ senyal.video }}</td>
             </tr>
             <tr v-for="audio in senyal.audios" :key="audio.numero">
-              <td>ÀUDIO {{ audio.numero }}</td>
-              <td>{{ audio.contingut }}</td>
+
+                <td v-if="audio.contingut">ÀUDIO {{ audio.numero }}</td>
+                <td v-if="audio.contingut">{{ audio.contingut }}</td>
             </tr>
           </tbody>
         </table>

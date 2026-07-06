@@ -7,21 +7,26 @@ import { onBeforeRouteLeave } from 'vue-router'
  * Composable reutilitzable per protegir formularis amb canvis no desats.
  *
  * Ús:
- *   const { isDirty, markDirty, markClean, confirmLeave } = useDirtyGuard()
+ *   const { isDirty, markDirty, markClean, confirmLeave, cancelLeave, resetGuard } = useDirtyGuard()
  *
  * - Crida markDirty() quan l'usuari modifica qualsevol camp.
  * - Crida markClean() just abans de guardar o descartar.
+ * - Crida resetGuard() en canviar de document dins el mateix component
+ *   (navegació entre IDs sense destruir el component).
  * - El guard intercepta la navegació de Vue Router automàticament.
  * - El guard intercepta el tancament/recàrrega del navegador automàticament.
  *
- * Per al diàleg de confirmació, el composable exposa `pendingNavigation`:
- * quan no és null, significa que hi ha una navegació pendent esperant
- * confirmació. La vista ha de mostrar un v-dialog i cridar
- * confirmLeave() o cancelLeave() segons la resposta de l'usuari.
+ * Per al diàleg de confirmació intern (canvi de document sense deixar el component),
+ * el composable exposa `pendingRouteChange`: quan no és null hi ha un canvi
+ * de ruta pendent. La vista ha de mostrar el DirtyGuardDialog i cridar
+ * confirmRouteChange() o cancelRouteChange().
+ *
+ * `pendingNavigation` segueix gestionant el cas de sortir completament del component.
  */
 export function useDirtyGuard() {
   const isDirty = ref(false)
-  const pendingNavigation = ref(null) // guarda el `next` de Vue Router
+  const pendingNavigation = ref(null)    // next() de onBeforeRouteLeave
+  const pendingRouteChange = ref(null)   // callback per a canvis de params dins el component
 
   function markDirty() {
     isDirty.value = true
@@ -31,11 +36,21 @@ export function useDirtyGuard() {
     isDirty.value = false
   }
 
+  /**
+   * Reinicia completament l'estat del guard.
+   * Cridar quan el component carrega un document nou (canvi de route.params.id).
+   */
+  function resetGuard() {
+    isDirty.value = false
+    pendingNavigation.value = null
+    pendingRouteChange.value = null
+  }
+
   // ── Tancament / recàrrega del navegador ────────────────────────────────
   function handleBeforeUnload(e) {
     if (!isDirty.value) return
     e.preventDefault()
-    e.returnValue = '' // necessari per a Chrome
+    e.returnValue = ''
   }
 
   onMounted(() => {
@@ -46,15 +61,13 @@ export function useDirtyGuard() {
     window.removeEventListener('beforeunload', handleBeforeUnload)
   })
 
-  // ── Navegació interna de Vue Router ────────────────────────────────────
+  // ── Sortida completa del component (sidebar, enrere...) ─────────────────
   onBeforeRouteLeave((to, from, next) => {
     if (!isDirty.value) {
       next()
       return
     }
-    // Guardem el callback `next` per poder-lo executar quan l'usuari confirmi
     pendingNavigation.value = next
-    // No cridem next() ara; la vista mostrarà el diàleg i decidirà
   })
 
   function confirmLeave() {
@@ -72,12 +85,51 @@ export function useDirtyGuard() {
     }
   }
 
+  // ── Canvi de document dins el mateix component (params.id canvia) ───────
+  /**
+   * Comprova si hi ha canvis pendents abans de permetre un canvi de document.
+   * Si n'hi ha, guarda el callback i retorna false (la vista ha de mostrar el diàleg).
+   * Si no n'hi ha, executa el callback directament i retorna true.
+   *
+   * Ús a la vista:
+   *   watch(() => route.params.id, (newId) => {
+   *     guardRouteChange(() => carregarDocument(newId))
+   *   })
+   */
+  function guardRouteChange(callback) {
+    if (!isDirty.value) {
+      callback()
+      return
+    }
+    pendingRouteChange.value = callback
+  }
+
+  function confirmRouteChange() {
+    isDirty.value = false
+    if (pendingRouteChange.value) {
+      pendingRouteChange.value()
+      pendingRouteChange.value = null
+    }
+  }
+
+  function cancelRouteChange() {
+    pendingRouteChange.value = null
+  }
+
+  // El diàleg de la vista ha de mostrar-se quan qualsevol dels dos està actiu
+  const showDirtyDialog = ref(false)
+
   return {
     isDirty,
     pendingNavigation,
+    pendingRouteChange,
     markDirty,
     markClean,
+    resetGuard,
     confirmLeave,
     cancelLeave,
+    guardRouteChange,
+    confirmRouteChange,
+    cancelRouteChange,
   }
 }

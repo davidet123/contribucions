@@ -61,9 +61,9 @@
 
     <!-- Dialog canvis sense desar -->
     <DirtyGuardDialog
-      :model-value="pendingNavigation !== null"
-      @confirm="confirmLeave"
-      @cancel="cancelLeave"
+      :model-value="pendingNavigation !== null || pendingRouteChange !== null"
+      @confirm="pendingNavigation ? confirmLeave() : confirmRouteChange()"
+      @cancel="pendingNavigation ? cancelLeave() : cancelRouteChange()"
     />
 
     <!-- Dialog recuperar esborrany -->
@@ -156,13 +156,14 @@ const dialogVersio = ref(false)
 const mostrarPreview = ref(false)
 const versioOriginal = ref(null)
 
-const { pendingNavigation, markDirty, markClean, confirmLeave, cancelLeave } = useDirtyGuard()
+const { pendingNavigation, pendingRouteChange, markDirty, markClean, resetGuard, confirmLeave, cancelLeave, guardRouteChange, confirmRouteChange, cancelRouteChange } = useDirtyGuard()
 const draft = useEditorDraft('contribucio')
 const dialogDraft = ref(false)
 const draftSavedAt = ref(null)
 
-onMounted(async () => {
-  const id = route.params.id
+async function carregarDocument(id) {
+  resetGuard()
+  saved.value = false
 
   // ✅ Esperar el catàleg SIEMPRE, antes de todo
   if (cataleg.equips.length === 0) {
@@ -180,7 +181,6 @@ onMounted(async () => {
       if (exists) {
         draftSavedAt.value = savedAt
         dialogDraft.value = true
-        // Carreguem l'original mentre l'usuari decideix
         contribucio.value = JSON.parse(JSON.stringify(c))
       } else {
         contribucio.value = JSON.parse(JSON.stringify(c))
@@ -200,6 +200,13 @@ onMounted(async () => {
       dialogDraft.value = true
     }
   }
+}
+
+onMounted(() => carregarDocument(route.params.id))
+
+// Detecta canvi de document dins el mateix component (e.g. /nova des d'un document obert)
+watch(() => route.params.id, (newId) => {
+  guardRouteChange(() => carregarDocument(newId))
 })
 
 function handleUpdate(patch) {

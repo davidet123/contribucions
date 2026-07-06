@@ -69,6 +69,7 @@
               v-model="localitzacio.ip"
               label="IP"
               placeholder="Detectar automàticament"
+              readonly
             />
           </v-col>
           <v-col cols="12" sm="4" md="2" class="d-flex align-center">
@@ -85,36 +86,31 @@
           </v-col>
           <v-col cols="12" md="6">
             <div class="instalador-row">
-              <v-text-field
-                v-model="nomInstalador"
-                label="Instal·lador"
-                placeholder="Selecciona instal·lador"
-                readonly
-                density="compact"
-                hide-details
-              />
-              <v-btn size="small" variant="outlined" @click="obrirDialogInstalador" class="flex-shrink-0">
+              <v-btn size="small" variant="outlined" @click="obrirDialogInstalador" class="flex-shrink-0" title="Seleccionar instal·lador">
                 <v-icon size="16">mdi-account-hard-hat-outline</v-icon>
               </v-btn>
+              <span v-if="nomInstalador" class="instalador-nom">{{ nomInstalador }}</span>
+              <span v-else class="instalador-placeholder" @click="obrirDialogInstalador">Selecciona instal·lador</span>
+              <a
+                v-if="telefonInstalador"
+                :href="`tel:${telefonInstalador}`"
+                class="instalador-telefon"
+                title="Trucar"
+              >
+                <v-icon size="14" class="mr-1">mdi-phone-outline</v-icon>{{ telefonInstalador }}
+              </a>
               <v-btn
                 v-if="localitzacio.instaladorId || localitzacio.telefonManual"
-                size="small"
+                icon
+                size="x-small"
                 variant="text"
                 color="error"
                 @click="netejarInstalador"
-                class="flex-shrink-0"
+                class="flex-shrink-0 ml-auto"
               >
                 <v-icon size="14">mdi-close</v-icon>
               </v-btn>
             </div>
-          </v-col>
-          <v-col cols="12" md="6" v-if="!localitzacio.instaladorId && localitzacio.telefonManual">
-            <v-text-field
-              v-model="localitzacio.telefonManual"
-              label="Telèfon (manual)"
-              density="compact"
-              placeholder="Sense instal·lador a l'agenda"
-            />
           </v-col>
         </v-row>
       </div>
@@ -161,9 +157,9 @@
 
     <!-- Dialog canvis sense desar -->
     <DirtyGuardDialog
-      :model-value="pendingNavigation !== null"
-      @confirm="confirmLeave"
-      @cancel="cancelLeave"
+      :model-value="pendingNavigation !== null || pendingRouteChange !== null"
+      @confirm="pendingNavigation ? confirmLeave() : confirmRouteChange()"
+      @cancel="pendingNavigation ? cancelLeave() : cancelRouteChange()"
     />
 
     <!-- Dialog confirmar eliminar -->
@@ -203,23 +199,17 @@ const localitzacio = ref(null)
 const detectantIP = ref(false)
 const dialogInstalador = ref(false)
 
-const { isDirty, pendingNavigation, markDirty, markClean, confirmLeave, cancelLeave } = useDirtyGuard()
-
-// Detecta qualsevol canvi al formulari un cop carregat
-watch(localitzacio, (nouValor, valorAntic) => {
-  if (valorAntic !== null && nouValor !== null) markDirty()
-}, { deep: true })
+const { isDirty, pendingNavigation, pendingRouteChange, markDirty, markClean, resetGuard, confirmLeave, cancelLeave, guardRouteChange, confirmRouteChange, cancelRouteChange } = useDirtyGuard()
 
 const tipusOptions = [
   { value: 'permanent', label: 'Permanent' },
   { value: 'ocasional', label: 'Ocasional' },
 ]
 
-// isNou indica que encara no s'ha guardat a Firestore
 const isNou = ref(false)
 
-onMounted(async () => {
-  const id = route.params.id
+async function carregarDocument(id) {
+  resetGuard()
   if (id && id !== 'nova') {
     if (store.localitzacions.length === 0) {
       await store.carregarTot()
@@ -232,17 +222,37 @@ onMounted(async () => {
       router.push('/ftth')
     }
   } else {
-    // Crear objecte local sense escriure a Firestore
     localitzacio.value = store.novaLocalitzacioLocal()
     isNou.value = true
   }
+}
+
+onMounted(() => carregarDocument(route.params.id))
+
+// Detecta canvi de document dins el mateix component
+watch(() => route.params.id, (newId) => {
+  guardRouteChange(() => carregarDocument(newId))
 })
+
+// Detecta qualsevol canvi al formulari un cop carregat
+watch(localitzacio, (nouValor, valorAntic) => {
+  if (valorAntic !== null && nouValor !== null) markDirty()
+}, { deep: true })
 
 const nomInstalador = computed(() => {
   if (!localitzacio.value) return ''
   if (localitzacio.value.instaladorId) {
     const inst = store.getInstaladorById(localitzacio.value.instaladorId)
     return inst?.nom || ''
+  }
+  return ''
+})
+
+const telefonInstalador = computed(() => {
+  if (!localitzacio.value) return ''
+  if (localitzacio.value.instaladorId) {
+    const inst = store.getInstaladorById(localitzacio.value.instaladorId)
+    return inst?.telefon || ''
   }
   return localitzacio.value.telefonManual || ''
 })
@@ -418,11 +428,49 @@ async function ferEliminar() {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 40px;
+  padding: 0 4px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  background: #F9FAFB;
+  overflow: hidden;
 }
 
-.instalador-row .v-text-field {
-  flex: 1;
+.instalador-nom {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1A1A2E;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
   min-width: 0;
+}
+
+.instalador-placeholder {
+  font-size: 13px;
+  color: #9CA3AF;
+  cursor: pointer;
+  flex: 1;
+}
+
+.instalador-telefon {
+  display: flex;
+  align-items: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: #E8001C;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.instalador-telefon:hover {
+  background: #FFF0F0;
 }
 
 /* Responsive mòbil */

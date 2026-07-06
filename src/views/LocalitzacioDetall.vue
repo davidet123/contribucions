@@ -299,9 +299,9 @@
 
     <!-- Dialog canvis sense desar -->
     <DirtyGuardDialog
-      :model-value="pendingNavigation !== null"
-      @confirm="confirmLeave"
-      @cancel="cancelLeave"
+      :model-value="pendingNavigation !== null || pendingRouteChange !== null"
+      @confirm="pendingNavigation ? confirmLeave() : confirmRouteChange()"
+      @cancel="pendingNavigation ? cancelLeave() : cancelRouteChange()"
     />
 
     <!-- Dialog confirmar eliminació -->
@@ -338,7 +338,7 @@ const store = useLocalitzacioStore()
 const localitzacio = ref(null)
 const dialogEliminar = ref(false)
 
-const { isDirty, pendingNavigation, markDirty, markClean, confirmLeave, cancelLeave } = useDirtyGuard()
+const { isDirty, pendingNavigation, pendingRouteChange, markDirty, markClean, resetGuard, confirmLeave, cancelLeave, guardRouteChange, confirmRouteChange, cancelRouteChange } = useDirtyGuard()
 
 watch(localitzacio, (nouValor, valorAntic) => {
   if (valorAntic !== null && nouValor !== null) markDirty()
@@ -368,8 +368,8 @@ const transportAltreSel = computed(() =>
 
 const isNou = ref(false)
 
-onMounted(async () => {
-  const id = route.params.id
+async function carregarDocument(id) {
+  resetGuard()
   if (id && id !== 'nova') {
     if (store.localitzacions.length === 0) {
       await store.carregarTotes()
@@ -385,6 +385,12 @@ onMounted(async () => {
     localitzacio.value = store.novaLocalitzacioLocal()
     isNou.value = true
   }
+}
+
+onMounted(() => carregarDocument(route.params.id))
+
+watch(() => route.params.id, (newId) => {
+  guardRouteChange(() => carregarDocument(newId))
 })
 
 // ── Contactes ─────────────────────────────────────────────────────────────

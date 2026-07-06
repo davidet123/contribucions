@@ -3,18 +3,18 @@
     <v-card>
       <v-card-title class="dirty-title pa-6 pb-3">
         <v-icon color="warning" size="20" class="mr-2">mdi-alert-outline</v-icon>
-        Canvis sense desar
+        Canvis sense guardar
       </v-card-title>
       <v-card-text class="pa-6 pt-2">
-        Tens canvis que no s'han desat. Si surts ara es perdran.
+        Tens canvis que no s'han guardat. Si surts ara es perdran.
       </v-card-text>
       <v-card-actions class="pa-4 pt-0">
         <v-btn variant="text" @click="$emit('cancel')">
-          Tornar al formulari
+          Tornar
         </v-btn>
         <v-spacer />
         <v-btn color="error" variant="flat" @click="$emit('confirm')">
-          Sortir sense desar
+          Sortir sense guardar
         </v-btn>
       </v-card-actions>
     </v-card>

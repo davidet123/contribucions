@@ -183,9 +183,9 @@
 
     <!-- Dialog canvis sense desar -->
     <DirtyGuardDialog
-      :model-value="pendingNavigation !== null"
-      @confirm="confirmLeave"
-      @cancel="cancelLeave"
+      :model-value="pendingNavigation !== null || pendingRouteChange !== null"
+      @confirm="pendingNavigation ? confirmLeave() : confirmRouteChange()"
+      @cancel="pendingNavigation ? cancelLeave() : cancelRouteChange()"
     />
 
     <!-- Dialog eliminar -->
@@ -229,13 +229,10 @@ const retransmissio = ref(null)
 const dialogEliminar = ref(false)
 const isNou = ref(false)
 
-const { isDirty, pendingNavigation, markDirty, markClean, confirmLeave, cancelLeave } = useDirtyGuard()
+const { isDirty, pendingNavigation, pendingRouteChange, markDirty, markClean, resetGuard, confirmLeave, cancelLeave, guardRouteChange, confirmRouteChange, cancelRouteChange } = useDirtyGuard()
 
-watch(retransmissio, (nouValor, valorAntic) => {
-  if (valorAntic !== null && nouValor !== null) markDirty()
-}, { deep: true })
-
-onMounted(async () => {
+async function carregarDocument(id) {
+  resetGuard()
   await Promise.all([
     store.llista.length === 0 ? store.carregarTotes() : Promise.resolve(),
     storeContr.llista.length === 0 ? storeContr.carregarTotes() : Promise.resolve(),
@@ -243,7 +240,6 @@ onMounted(async () => {
     storeLoc.localitzacions.length === 0 ? storeLoc.carregarTotes() : Promise.resolve(),
   ])
 
-  const id = route.params.id
   if (id && id !== 'nova') {
     const r = store.getById(id)
     if (r) {
@@ -256,7 +252,17 @@ onMounted(async () => {
     retransmissio.value = store.novaRetransmissioLocal()
     isNou.value = true
   }
+}
+
+onMounted(() => carregarDocument(route.params.id))
+
+watch(() => route.params.id, (newId) => {
+  guardRouteChange(() => carregarDocument(newId))
 })
+
+watch(retransmissio, (nouValor, valorAntic) => {
+  if (valorAntic !== null && nouValor !== null) markDirty()
+}, { deep: true })
 
 // Items per als selectors
 const contribucionsItems = computed(() =>
