@@ -9,7 +9,7 @@
           {{ localitzacionsOrdenades.length !== 1 ? 'localitzacions' : 'localització' }}
         </p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/localitzacio/nova')" size="small">
+      <v-btn v-if="authStore.potEscriureTot" color="primary" prepend-icon="mdi-plus" @click="$router.push('/localitzacio/nova')" size="small">
         Nova localització
       </v-btn>
     </div>
@@ -32,7 +32,7 @@
       <v-icon size="56" color="grey-lighten-2">mdi-map-marker-multiple-outline</v-icon>
       <p class="empty-title">Cap localització</p>
       <p class="empty-sub">Crea la primera localització per començar</p>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/localitzacio/nova')">
+      <v-btn v-if="authStore.potEscriureTot" color="primary" prepend-icon="mdi-plus" @click="$router.push('/localitzacio/nova')">
         Nova localització
       </v-btn>
     </div>
@@ -57,6 +57,7 @@
               {{ loc.transportSenyal.length }} transport{{ loc.transportSenyal.length !== 1 ? 's' : '' }}
             </v-chip>
             <v-btn
+              v-if="authStore.potEscriureTot"
               icon
               size="x-small"
               variant="text"
@@ -118,10 +119,12 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useLocalitzacioStore } from '@/stores/localitzacio'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 
 const store = useLocalitzacioStore()
+const authStore = useAuthStore()
 onMounted(() => store.carregarTotes())
 const { localitzacionsOrdenades } = storeToRefs(store)
 

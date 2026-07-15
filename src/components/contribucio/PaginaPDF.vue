@@ -176,7 +176,7 @@ defineExpose({ paginaRef })
   font-size: 8pt;
 }
 .pdf-senyal-table th {
-  background: #1A1A2E;
+  background: #43464b;
   color: white;
   font-size: 8pt;
   padding: 4px 6px;

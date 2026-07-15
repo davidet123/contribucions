@@ -101,6 +101,7 @@ const logoSrc = computed(() => props.equip?.logoId || null)
   display: grid;
   width: 100%;
   position: relative;
+  grid-template-rows: auto;
   grid-auto-rows: 26px;
   align-items: stretch;
 }
@@ -159,10 +160,6 @@ const logoSrc = computed(() => props.equip?.logoId || null)
   font-style: italic;
   line-height: 1.3;
   white-space: normal;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 /* Cel·la via */
@@ -215,7 +212,7 @@ const logoSrc = computed(() => props.equip?.logoId || null)
 
 .fletxa-text {
   font-family: 'DM Mono', monospace;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 600;
   color: #1A1A2E;
   padding: 0 6px;
@@ -261,7 +258,7 @@ const logoSrc = computed(() => props.equip?.logoId || null)
 
 .desti-nom {
   font-family: 'Space Mono', monospace;
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 700;
   color: #1A1A2E;
   white-space: nowrap;

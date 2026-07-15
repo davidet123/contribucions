@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const routes = [
   {
@@ -19,7 +20,7 @@ const routes = [
     path: '/retransmissions/nova',
     name: 'NovaRetransmissio',
     component: () => import('@/views/RetransmissioDetall.vue'),
-    meta: { title: 'Nova retransmissió' }
+    meta: { title: 'Nova retransmissió', requiresWrite: 'all' }
   },
   {
     path: '/retransmissions/:id',
@@ -39,7 +40,7 @@ const routes = [
     path: '/contribucions/nova',
     name: 'NovaContribucio',
     component: () => import('@/views/ContribucioEditor.vue'),
-    meta: { title: 'Nova contribució' }
+    meta: { title: 'Nova contribució', requiresWrite: 'all' }
   },
   {
     path: '/contribucions/:id',
@@ -79,7 +80,7 @@ const routes = [
     path: '/ftth/nova',
     name: 'NovaFTTH',
     component: () => import('@/views/FTTHDetall.vue'),
-    meta: { title: 'Nova localització FTTH' }
+    meta: { title: 'Nova localització FTTH', requiresWrite: 'ftth' }
   },
   {
     path: '/ftth/:id',
@@ -99,7 +100,7 @@ const routes = [
     path: '/localitzacio/nova',
     name: 'NovaLocalitzacio',
     component: () => import('@/views/LocalitzacioDetall.vue'),
-    meta: { title: 'Nova localització' }
+    meta: { title: 'Nova localització', requiresWrite: 'all' }
   },
   {
     path: '/localitzacio/:id',
@@ -107,11 +108,56 @@ const routes = [
     component: () => import('@/views/LocalitzacioDetall.vue'),
     meta: { title: 'Editar localització' }
   },
+
+  // ========== ADMINISTRACIÓ ==========
+  {
+    path: '/admin/usuaris',
+    name: 'CrearUsuari',
+    component: () => import('@/views/CrearUsuari.vue'),
+    meta: { title: 'Usuaris', requiresAdmin: true }
+  },
 ]
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes
+})
+
+// Guard: només restringeix les rutes marcades explícitament (requiresAdmin o
+// requiresWrite). La resta de rutes (llistes i fitxes de detall/edició) són
+// de lectura pública i no passen per cap comprovació, ja que qualsevol
+// persona -autenticada o no- pot consultar-les.
+router.beforeEach(async (to) => {
+  if (!to.meta.requiresAdmin && !to.meta.requiresWrite) return true
+
+  const authStore = useAuthStore()
+
+  // Si Firebase encara no ha resolt la sessió inicial (p. ex. recàrrega de pàgina),
+  // esperem a que ho faça abans de decidir si es bloqueja l'accés.
+  if (authStore.loading) {
+    await new Promise(resolve => {
+      const unwatch = setInterval(() => {
+        if (!authStore.loading) {
+          clearInterval(unwatch)
+          resolve()
+        }
+      }, 50)
+    })
+  }
+
+  if (to.meta.requiresAdmin && !authStore.esAdmin) {
+    return { path: '/' }
+  }
+
+  if (to.meta.requiresWrite === 'all' && !authStore.potEscriureTot) {
+    return { path: '/' }
+  }
+
+  if (to.meta.requiresWrite === 'ftth' && !authStore.potEscriureFtth) {
+    return { path: '/' }
+  }
+
+  return true
 })
 
 export default router

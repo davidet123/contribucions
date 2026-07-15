@@ -6,7 +6,7 @@
         <h1 class="page-title">Contribucions</h1>
         <p class="page-subtitle">{{ llistaOrdenada.length }} document{{ llistaOrdenada.length !== 1 ? 's' : '' }}</p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/contribucions/nova')">
+      <v-btn v-if="authStore.potEscriureTot" color="primary" prepend-icon="mdi-plus" @click="$router.push('/contribucions/nova')">
         Nova contribució
       </v-btn>
     </div>
@@ -29,7 +29,7 @@
       <v-icon size="56" color="grey-lighten-2">mdi-file-document-outline</v-icon>
       <p class="empty-title">Cap contribució</p>
       <p class="empty-sub">Crea la primera contribució per començar</p>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/contribucions/nova')">
+      <v-btn v-if="authStore.potEscriureTot" color="primary" prepend-icon="mdi-plus" @click="$router.push('/contribucions/nova')">
         Nova contribució
       </v-btn>
     </div>
@@ -78,7 +78,7 @@
           </v-tooltip>
           <v-tooltip text="Eliminar">
             <template #activator="{ props }">
-              <v-btn v-bind="props" icon size="small" variant="text" color="error" @click="confirmarEliminar(c)">
+              <v-btn v-if="authStore.potEscriureTot" v-bind="props" icon size="small" variant="text" color="error" @click="confirmarEliminar(c)">
                 <v-icon size="16">mdi-delete-outline</v-icon>
               </v-btn>
             </template>
@@ -115,11 +115,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useContribucionsStore } from '@/stores/contribucions'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 
 const router = useRouter()
 const store = useContribucionsStore()
+const authStore = useAuthStore()
 const { llistaOrdenada } = storeToRefs(store)
 
 const { duplicar, eliminar } = store

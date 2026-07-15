@@ -6,7 +6,7 @@
         <h1 class="page-title">Localitzacions FTTH</h1>
         <p class="page-subtitle">{{ localitzacionsOrdenades.length }} localitzac{{ localitzacionsOrdenades.length !== 1 ? 'ions' : 'ió' }}</p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/ftth/nova')" size="small">
+      <v-btn v-if="authStore.potEscriureFtth" color="primary" prepend-icon="mdi-plus" @click="$router.push('/ftth/nova')" size="small">
         Nova localització
       </v-btn>
     </div>
@@ -34,7 +34,7 @@
       <v-icon size="56" color="grey-lighten-2">mdi-fiber-optical</v-icon>
       <p class="empty-title">Cap localització FTTH</p>
       <p class="empty-sub">Crea la primera localització per començar</p>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/ftth/nova')">
+      <v-btn v-if="authStore.potEscriureFtth" color="primary" prepend-icon="mdi-plus" @click="$router.push('/ftth/nova')">
         Nova localització
       </v-btn>
     </div>
@@ -54,6 +54,7 @@
               {{ loc.tipus === 'permanent' ? 'Permanent' : 'Ocasional' }}
             </v-chip>
             <v-btn
+              v-if="authStore.potEscriureFtth"
               icon
               size="x-small"
               variant="text"
@@ -105,11 +106,13 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFtthStore } from '@/stores/ftth'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 
 const router = useRouter()
 const store = useFtthStore()
+const authStore = useAuthStore()
 onMounted(() => store.carregarTot())
 const { localitzacionsOrdenades, instaladors } = storeToRefs(store)
 

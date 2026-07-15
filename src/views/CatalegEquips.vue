@@ -5,7 +5,7 @@
         <h1 class="page-title">Catàleg d'equips</h1>
         <p class="page-subtitle">{{ cataleg.equips.length }} equips al catàleg</p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="obrirNou">Nou equip</v-btn>
+      <v-btn v-if="authStore.potEscriureTot" color="primary" prepend-icon="mdi-plus" @click="obrirNou">Nou equip</v-btn>
     </div>
 
     <v-table>
@@ -38,10 +38,10 @@
           <td class="text-caption text-grey">{{ equip.notes }}</td>
           <td>
             <div class="fila-accions">
-              <v-btn icon size="x-small" variant="text" @click="obrirEditar(equip)">
+              <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" @click="obrirEditar(equip)">
                 <v-icon size="16">mdi-pencil-outline</v-icon>
               </v-btn>
-              <v-btn icon size="x-small" variant="text" color="error" @click="confirmarEliminar(equip)">
+              <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="confirmarEliminar(equip)">
                 <v-icon size="16">mdi-delete-outline</v-icon>
               </v-btn>
             </div>
@@ -76,9 +76,11 @@
 <script setup>
 import { ref } from 'vue'
 import { useCatalegStore } from '@/stores/cataleg'
+import { useAuthStore } from '@/stores/auth'
 import DialogNouEquip from '@/components/cataleg/DialogNouEquip.vue'
 
 const cataleg = useCatalegStore()
+const authStore = useAuthStore()
 
 const dialogEquip = ref(false)
 const equipEditat = ref(null)

@@ -2,12 +2,86 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Per ara: accés lliure (xarxa interna / equip petit).
-    // Quan afegiu autenticació, canvieu per:
-    //   allow read, write: if request.auth != null;
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    // El rol es llig del document /usuaris/{uid}. Aquesta lectura interna (get())
+    // no passa per les rules de la col·lecció "usuaris"; és una consulta pròpia
+    // del motor de rules i sempre està permesa per a l'avaluació.
+    function estaAutenticat() {
+      return request.auth != null;
+    }
 
-    match /{document=**} {
-      allow read, write: if true;
+    function rolActual() {
+      return estaAutenticat()
+        ? get(/databases/$(database)/documents/usuaris/$(request.auth.uid)).data.rol
+        : null;
+    }
+
+    function esAdmin() {
+      return rolActual() == 'admin';
+    }
+
+    // Admin i ingeniero: mateixos permisos d'escriptura excepte gestió d'usuaris.
+    function potEscriureTot() {
+      return rolActual() == 'admin' || rolActual() == 'ingeniero';
+    }
+
+    // Tècnic només pot escriure a FTTH; admin i ingeniero també hi poden escriure.
+    function potEscriureFtth() {
+      return potEscriureTot() || rolActual() == 'tecnico';
+    }
+
+    // ── Usuaris ──────────────────────────────────────────────────────────────
+    // Gestió (alta/edició de rols) exclusiva d'admin. Cada usuari pot llegir
+    // el seu propi document per resoldre el seu nom/rol dins de l'app.
+    match /usuaris/{uid} {
+      allow read: if esAdmin() || (estaAutenticat() && request.auth.uid == uid);
+      allow write: if esAdmin();
+    }
+
+    // ── Retransmissions ──────────────────────────────────────────────────────
+    match /retransmissions/{doc} {
+      allow read: if true;
+      allow write: if potEscriureTot();
+    }
+
+    // ── Contribucions ────────────────────────────────────────────────────────
+    match /contribucions/{doc} {
+      allow read: if true;
+      allow write: if potEscriureTot();
+    }
+
+    // ── Localització ─────────────────────────────────────────────────────────
+    match /localitzacions/{doc} {
+      allow read: if true;
+      allow write: if potEscriureTot();
+    }
+
+    // ── FTTH ─────────────────────────────────────────────────────────────────
+    match /ftth_localitzacions/{doc} {
+      allow read: if true;
+      allow write: if potEscriureFtth();
+    }
+    match /ftth_instaladors/{doc} {
+      allow read: if true;
+      allow write: if potEscriureFtth();
+    }
+
+    // ── Catàleg ──────────────────────────────────────────────────────────────
+    match /cataleg_tipusEquip/{doc} {
+      allow read: if true;
+      allow write: if potEscriureTot();
+    }
+    match /cataleg_equips/{doc} {
+      allow read: if true;
+      allow write: if potEscriureTot();
+    }
+    match /cataleg_destinsCCT/{doc} {
+      allow read: if true;
+      allow write: if potEscriureTot();
+    }
+    match /cataleg_recursosComun/{doc} {
+      allow read: if true;
+      allow write: if potEscriureTot();
     }
   }
 }

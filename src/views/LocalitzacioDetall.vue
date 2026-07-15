@@ -19,12 +19,12 @@
           color="error"
           size="small"
           prepend-icon="mdi-delete-outline"
-          v-if="localitzacio && localitzacio.id"
+          v-if="localitzacio && localitzacio.id && authStore.potEscriureTot"
           @click="confirmarEliminar"
         >
           Eliminar
         </v-btn>
-        <v-btn color="primary" prepend-icon="mdi-content-save-outline" @click="guardar" size="small">
+        <v-btn v-if="authStore.potEscriureTot" color="primary" prepend-icon="mdi-content-save-outline" @click="guardar" size="small">
           Guardar
         </v-btn>
       </div>
@@ -330,10 +330,12 @@ import { v4 as uuidv4 } from 'uuid'
 import FotoUploader from '@/components/ftth/FotoUploader.vue'
 import DirtyGuardDialog from '@/components/shared/DirtyGuardDialog.vue'
 import { useDirtyGuard } from '@/composables/useDirtyGuard'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const store = useLocalitzacioStore()
+const authStore = useAuthStore()
 
 const localitzacio = ref(null)
 const dialogEliminar = ref(false)

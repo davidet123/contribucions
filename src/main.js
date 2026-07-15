@@ -56,6 +56,13 @@ app.use(pinia)
 app.use(router)
 app.use(vuetify)
 
+// ── Sessió d'autenticació ──────────────────────────────────────────────────────
+// S'inicialitza abans del mount per començar a resoldre l'estat de sessió
+// (persistida o no) el més aviat possible.
+import('./stores/auth').then(({ useAuthStore }) => {
+  useAuthStore().init()
+})
+
 // ── Càrrega inicial de dades des de Firestore ─────────────────────────────────
 // S'importa dins de main.js per garantir que Pinia ja és actiu quan es crida.
 // Cada store carrega les seves dades una sola vegada en iniciar l'app.

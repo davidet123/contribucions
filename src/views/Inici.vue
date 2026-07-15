@@ -27,20 +27,20 @@
     </div>
 
     <!-- Accions ràpides -->
-    <div class="accions-rapides">
-      <button class="accio-btn" @click="$router.push('/retransmissions/nova')">
+    <div v-if="authStore.potEscriureTot || authStore.potEscriureFtth" class="accions-rapides">
+      <button v-if="authStore.potEscriureTot" class="accio-btn" @click="$router.push('/retransmissions/nova')">
         <v-icon size="20">mdi-broadcast</v-icon>
         <span>Nova retransmissió</span>
       </button>
-      <button class="accio-btn" @click="$router.push('/contribucions/nova')">
+      <button v-if="authStore.potEscriureTot" class="accio-btn" @click="$router.push('/contribucions/nova')">
         <v-icon size="20">mdi-cable-data</v-icon>
         <span>Nova contribució</span>
       </button>
-      <button class="accio-btn" @click="$router.push('/ftth/nova')">
+      <button v-if="authStore.potEscriureFtth" class="accio-btn" @click="$router.push('/ftth/nova')">
         <v-icon size="20">mdi-web</v-icon>
         <span>Nova FTTH</span>
       </button>
-      <button class="accio-btn" @click="$router.push('/localitzacio/nova')">
+      <button v-if="authStore.potEscriureTot" class="accio-btn" @click="$router.push('/localitzacio/nova')">
         <v-icon size="20">mdi-map-marker-plus-outline</v-icon>
         <span>Nova localització</span>
       </button>
@@ -139,6 +139,7 @@ import { useRetransmissionsStore, ESTATS } from '@/stores/retransmissions'
 import { useContribucionsStore } from '@/stores/contribucions'
 import { useFtthStore } from '@/stores/ftth'
 import { useLocalitzacioStore } from '@/stores/localitzacio'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -152,6 +153,7 @@ const storeRet   = useRetransmissionsStore()
 const storeContr = useContribucionsStore()
 const storeFtth  = useFtthStore()
 const storeLoc   = useLocalitzacioStore()
+const authStore  = useAuthStore()
 
 const { properes, enEmissio } = storeToRefs(storeRet)
 

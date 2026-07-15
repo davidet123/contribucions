@@ -6,7 +6,7 @@
         <h1 class="page-title">Retransmissions</h1>
         <p class="page-subtitle">{{ llistaFiltrada.length }} retransmission{{ llistaFiltrada.length !== 1 ? 's' : '' }}</p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" size="small" @click="$router.push('/retransmissions/nova')">
+      <v-btn v-if="authStore.potEscriureTot" color="primary" prepend-icon="mdi-plus" size="small" @click="$router.push('/retransmissions/nova')">
         Nova retransmissió
       </v-btn>
     </div>
@@ -47,7 +47,7 @@
       <v-icon size="56" color="grey-lighten-2">mdi-broadcast</v-icon>
       <p class="empty-title">Cap retransmissió</p>
       <p class="empty-sub">Crea la primera retransmissió per començar</p>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/retransmissions/nova')">
+      <v-btn v-if="authStore.potEscriureTot" color="primary" prepend-icon="mdi-plus" @click="$router.push('/retransmissions/nova')">
         Nova retransmissió
       </v-btn>
     </div>
@@ -104,7 +104,7 @@
 
         <!-- Accions -->
         <div class="r-card-accions">
-          <v-btn icon size="x-small" variant="text" color="error" @click.stop="confirmarEliminar(r)">
+          <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click.stop="confirmarEliminar(r)">
             <v-icon size="14">mdi-delete-outline</v-icon>
           </v-btn>
         </div>
@@ -135,6 +135,7 @@ import { useRetransmissionsStore, ESTATS } from '@/stores/retransmissions'
 import { useContribucionsStore } from '@/stores/contribucions'
 import { useFtthStore } from '@/stores/ftth'
 import { useLocalitzacioStore } from '@/stores/localitzacio'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 
@@ -142,6 +143,7 @@ const store      = useRetransmissionsStore()
 const storeContr = useContribucionsStore()
 const storeFtth  = useFtthStore()
 const storeLoc   = useLocalitzacioStore()
+const authStore  = useAuthStore()
 
 const { llistaOrdenada, properes } = storeToRefs(store)
 

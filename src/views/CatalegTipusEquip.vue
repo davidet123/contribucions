@@ -5,7 +5,7 @@
         <h1 class="page-title">Tipus d'equip</h1>
         <p class="page-subtitle">{{ cataleg.tipusEquip.length }} tipus configurats</p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="obrirNou">Nou tipus</v-btn>
+      <v-btn v-if="authStore.potEscriureTot" color="primary" prepend-icon="mdi-plus" @click="obrirNou">Nou tipus</v-btn>
     </div>
 
     <div class="contribucions-grid">
@@ -17,7 +17,7 @@
             <span class="tipus-nom">{{ tipus.nom }}</span>
             <v-chip size="x-small" color="secondary" class="ml-2">{{ tipus.categoria }}</v-chip>
           </div>
-          <div class="card-header-actions">
+          <div class="card-header-actions" v-if="authStore.potEscriureTot">
             <v-tooltip text="Editar">
               <template #activator="{ props }">
                 <v-btn v-bind="props" icon size="x-small" variant="text" @click="obrirEditar(tipus)">
@@ -176,9 +176,11 @@
 <script setup>
 import { ref } from 'vue'
 import { useCatalegStore } from '@/stores/cataleg'
+import { useAuthStore } from '@/stores/auth'
 import { CATEGORIES_EQUIP } from '@/utils/constants'
 
 const cataleg = useCatalegStore()
+const authStore = useAuthStore()
 
 const dirs = [
   { value: 'tx', label: 'Tx →' },

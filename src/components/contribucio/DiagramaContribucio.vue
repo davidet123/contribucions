@@ -92,7 +92,7 @@ const imatgeLloc = computed(() => props.contribucio?.imatgeLlocId || null)
 function getNomEquip(instancia) {
   if (instancia.nomPersonalitzat) return instancia.nomPersonalitzat
   if (instancia.nomProveidor) return instancia.nomProveidor
-  if (instancia.equipId) return cataleg.equipMap.value?.[instancia.equipId]?.nom || ''
+  if (instancia.equipId) return cataleg.equipMap[instancia.equipId]?.nom || ''
   return 'Equip'
 }
 
@@ -356,7 +356,7 @@ const equipsComunicacions = computed(() => comunicacionsPerUbicacio.value.equipG
 
 .cct-label-text {
   font-family: 'Space Mono', monospace;
-  font-size: 6.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: rgba(26,26,46,0.35);

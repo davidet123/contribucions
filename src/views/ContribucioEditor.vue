@@ -22,7 +22,7 @@
         <v-btn color="primary" prepend-icon="mdi-file-pdf-box" size="small" @click="exportarPDF">
           Exportar PDF
         </v-btn>
-        <v-btn color="secondary" prepend-icon="mdi-content-save-outline" size="small" @click="guardar">
+        <v-btn v-if="authStore.potEscriureTot" color="secondary" prepend-icon="mdi-content-save-outline" size="small" @click="guardar">
           Guardar
         </v-btn>
       </div>
@@ -144,11 +144,13 @@ import DiagramaContribucio from '@/components/contribucio/DiagramaContribucio.vu
 import PaginaPDF from '@/components/contribucio/PaginaPDF.vue'
 import DirtyGuardDialog from '@/components/shared/DirtyGuardDialog.vue'
 import { useDirtyGuard } from '@/composables/useDirtyGuard'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const store = useContribucionsStore()
 const cataleg = useCatalegStore()
+const authStore = useAuthStore()
 
 const contribucio = ref(null)
 const saved = ref(false)

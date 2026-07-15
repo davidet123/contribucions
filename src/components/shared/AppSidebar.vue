@@ -21,7 +21,7 @@
       <v-icon size="18">mdi-broadcast</v-icon>
       Totes les retransmissions
     </router-link>
-    <router-link to="/retransmissions/nova" class="nav-item" :class="{ active: $route.path === '/retransmissions/nova' }" @click="tancarDrawer">
+    <router-link v-if="authStore.potEscriureTot" to="/retransmissions/nova" class="nav-item" :class="{ active: $route.path === '/retransmissions/nova' }" @click="tancarDrawer">
       <v-icon size="18">mdi-plus-circle-outline</v-icon>
       Nova retransmissió
     </router-link>
@@ -34,7 +34,7 @@
       <v-icon size="18">mdi-format-list-bulleted</v-icon>
       Totes les contribucions
     </router-link>
-    <router-link to="/contribucions/nova" class="nav-item" :class="{ active: $route.path === '/contribucions/nova' }" @click="tancarDrawer">
+    <router-link v-if="authStore.potEscriureTot" to="/contribucions/nova" class="nav-item" :class="{ active: $route.path === '/contribucions/nova' }" @click="tancarDrawer">
       <v-icon size="18">mdi-plus-circle-outline</v-icon>
       Nova contribució
     </router-link>
@@ -47,7 +47,7 @@
       <v-icon size="18">mdi-web</v-icon>
       Totes les FTTH
     </router-link>
-    <router-link to="/ftth/nova" class="nav-item" :class="{ active: $route.path === '/ftth/nova' }" @click="tancarDrawer">
+    <router-link v-if="authStore.potEscriureFtth" to="/ftth/nova" class="nav-item" :class="{ active: $route.path === '/ftth/nova' }" @click="tancarDrawer">
       <v-icon size="18">mdi-plus-circle-outline</v-icon>
       Nova FTTH
     </router-link>
@@ -66,6 +66,7 @@
       Totes les localitzacions
     </router-link>
     <router-link
+      v-if="authStore.potEscriureTot"
       to="/localitzacio/nova"
       class="nav-item"
       :class="{ active: $route.path === '/localitzacio/nova' }"
@@ -92,20 +93,34 @@
       Recursos CCT
     </router-link>
 
+    <!-- Admin -->
+    <template v-if="authStore.esAdmin">
+      <div class="sidebar-divider" />
+      <div class="sidebar-section-label">Administració</div>
+      <router-link to="/admin/usuaris" class="nav-item" :class="{ active: $route.path === '/admin/usuaris' }" @click="tancarDrawer">
+        <v-icon size="18">mdi-account-cog-outline</v-icon>
+        Crear usuari
+      </router-link>
+    </template>
+
     <!-- Spacer -->
     <div class="sidebar-spacer" />
 
     <!-- Footer -->
     <div class="sidebar-footer">
-      <div class="sidebar-footer-text">À Mèdia · v1.0.2</div>
+      <UserSessionWidget />
+      <div class="sidebar-footer-text">À Mèdia · v1.0.4</div>
     </div>
   </nav>
 </template>
 
 <script setup>
 import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import UserSessionWidget from '@/components/shared/UserSessionWidget.vue'
 
 const $route = useRoute()
+const authStore = useAuthStore()
 
 const props = defineProps({
   drawerOpen: { type: Boolean, default: false },
@@ -196,7 +211,7 @@ function tancarDrawer() {
 }
 
 .sidebar-footer {
-  padding: 16px 20px;
+  padding: 8px 0 12px;
   border-top: 1px solid rgba(255,255,255,0.07);
 }
 
@@ -204,6 +219,7 @@ function tancarDrawer() {
   font-size: 11px;
   color: rgba(255,255,255,0.2);
   font-family: 'DM Mono', monospace;
+  padding: 4px 20px 0;
 }
 
 /* En mòbil, el sidebar és ocult per defecte */

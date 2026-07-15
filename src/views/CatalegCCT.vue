@@ -14,7 +14,7 @@
           Destins CCT
           <span class="count-badge">{{ cataleg.destinsCCT.length }}</span>
         </div>
-        <v-btn size="small" color="primary" prepend-icon="mdi-plus" @click="obrirNouDesti">Nou destí</v-btn>
+        <v-btn v-if="authStore.potEscriureTot" size="small" color="primary" prepend-icon="mdi-plus" @click="obrirNouDesti">Nou destí</v-btn>
       </div>
 
       <v-table density="compact">
@@ -30,7 +30,7 @@
             <td class="font-mono font-weight-bold">{{ d.nom }}</td>
             <td><v-chip size="x-small">{{ d.tipus }}</v-chip></td>
             <td>
-              <div class="fila-accions">
+              <div class="fila-accions" v-if="authStore.potEscriureTot">
                 <v-btn icon size="x-small" variant="text" @click="obrirEditarDesti(d)">
                   <v-icon size="14">mdi-pencil-outline</v-icon>
                 </v-btn>
@@ -51,7 +51,7 @@
           Recursos de comunicació
           <span class="count-badge">{{ cataleg.recursosComun.length }}</span>
         </div>
-        <v-btn size="small" color="primary" prepend-icon="mdi-plus" @click="obrirNouRecurs">Nou recurs</v-btn>
+        <v-btn v-if="authStore.potEscriureTot" size="small" color="primary" prepend-icon="mdi-plus" @click="obrirNouRecurs">Nou recurs</v-btn>
       </div>
 
       <v-table density="compact">
@@ -71,7 +71,7 @@
             <td class="text-caption">{{ ubicacioLabel(r.ubicacio) }}</td>
             <td class="font-mono text-caption">{{ r.extensio || '—' }}</td>
             <td>
-              <div class="fila-accions">
+              <div class="fila-accions" v-if="authStore.potEscriureTot">
                 <v-btn icon size="x-small" variant="text" @click="obrirEditarRecurs(r)">
                   <v-icon size="14">mdi-pencil-outline</v-icon>
                 </v-btn>
@@ -214,9 +214,11 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useCatalegStore } from '@/stores/cataleg'
+import { useAuthStore } from '@/stores/auth'
 import { TIPUS_DESTI_CCT, TIPUS_RECURS_COM, UBICACIONS_COM } from '@/utils/constants'
 
 const cataleg = useCatalegStore()
+const authStore = useAuthStore()
 
 // ── Ubicacions: opcions fixes + les que ja existeixen als recursos ──
 const ubicacionsOpcions = computed(() => {

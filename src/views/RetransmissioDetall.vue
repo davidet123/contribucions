@@ -15,7 +15,7 @@
       </div>
       <div class="header-actions">
         <v-btn
-          v-if="retransmissio?.id"
+          v-if="retransmissio?.id && authStore.potEscriureTot"
           variant="outlined"
           color="error"
           size="small"
@@ -24,7 +24,7 @@
         >
           Eliminar
         </v-btn>
-        <v-btn color="primary" prepend-icon="mdi-content-save-outline" size="small" @click="guardar">
+        <v-btn v-if="authStore.potEscriureTot" color="primary" prepend-icon="mdi-content-save-outline" size="small" @click="guardar">
           Guardar
         </v-btn>
       </div>
@@ -217,6 +217,7 @@ import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 import DirtyGuardDialog from '@/components/shared/DirtyGuardDialog.vue'
 import { useDirtyGuard } from '@/composables/useDirtyGuard'
+import { useAuthStore } from '@/stores/auth'
 
 const route   = useRoute()
 const router  = useRouter()
@@ -224,6 +225,7 @@ const store   = useRetransmissionsStore()
 const storeContr = useContribucionsStore()
 const storeFtth  = useFtthStore()
 const storeLoc   = useLocalitzacioStore()
+const authStore  = useAuthStore()
 
 const retransmissio = ref(null)
 const dialogEliminar = ref(false)

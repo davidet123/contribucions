@@ -24,3 +24,8 @@ Este proyecto es una aplicacion web diseñada para la planificacion, maquetacion
 * `src/components/`: Carpetas con los componentes de la interfaz, el contenedor del diagrama con la franja rosa fija del CCT, el renderizado de los nodos de equipos y la estructura del lienzo A4.
 * `src/stores/`: Gestion del estado compartido para el inventario tecnico y los datos de las fichas de contribucion.
 * `src/utils/`: Controladores de persistencia local sincronizada para el almacenamiento de datos.
+
+
+## Versiones
+
+* 1.0.4 - Añadido el aviso para guardar y limpiar documento al añadir uno nuevo

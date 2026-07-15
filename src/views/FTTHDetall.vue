@@ -13,7 +13,7 @@
       </div>
       <div class="header-actions">
         <v-btn
-          v-if="localitzacio?.id"
+          v-if="localitzacio?.id && authStore.potEscriureFtth"
           variant="outlined"
           color="error"
           size="small"
@@ -22,7 +22,7 @@
         >
           Eliminar
         </v-btn>
-        <v-btn color="primary" prepend-icon="mdi-content-save-outline" @click="guardar" size="small">
+        <v-btn v-if="authStore.potEscriureFtth" color="primary" prepend-icon="mdi-content-save-outline" @click="guardar" size="small">
           Guardar
         </v-btn>
       </div>
@@ -69,7 +69,6 @@
               v-model="localitzacio.ip"
               label="IP"
               placeholder="Detectar automàticament"
-              readonly
             />
           </v-col>
           <v-col cols="12" sm="4" md="2" class="d-flex align-center">
@@ -190,10 +189,12 @@ import FotoUploader from '@/components/ftth/FotoUploader.vue'
 import DialogInstalador from '@/components/ftth/DialogInstalador.vue'
 import DirtyGuardDialog from '@/components/shared/DirtyGuardDialog.vue'
 import { useDirtyGuard } from '@/composables/useDirtyGuard'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const store = useFtthStore()
+const authStore = useAuthStore()
 
 const localitzacio = ref(null)
 const detectantIP = ref(false)
