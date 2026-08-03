@@ -23,6 +23,10 @@ function novaLocalitzacio(base = {}) {
     ip: '',
     ipDetectedAt: null,
     telefonFixe: '',
+    // Metres d'acometida: '30' | '80' | '200' | 'altre' (sempre string)
+    metresAcometida: '',
+    // Text lliure quan metresAcometida === 'altre'
+    metresAcometidaAltre: '',
     speedResults: [],
     instaladorId: null,
     telefonManual: '',

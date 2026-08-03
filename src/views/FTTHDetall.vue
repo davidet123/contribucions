@@ -13,6 +13,16 @@
       </div>
       <div class="header-actions">
         <v-btn
+          v-if="!isNou"
+          variant="outlined"
+          size="small"
+          prepend-icon="mdi-share-variant-outline"
+          :loading="compartint"
+          @click="compartirEnllac"
+        >
+          Compartir
+        </v-btn>
+        <v-btn
           v-if="localitzacio?.id && authStore.potEscriureFtth"
           variant="outlined"
           color="error"
@@ -57,6 +67,24 @@
               v-model="localitzacio.adreca"
               label="Adreça"
               placeholder="Carrer, número, codi postal..."
+              :readonly="!authStore.potEscriureFtth"
+            />
+          </v-col>
+          <v-col cols="12" sm="6" md="4">
+            <v-select
+              v-model="localitzacio.metresAcometida"
+              :items="metresAcometidaOptions"
+              item-title="label"
+              item-value="value"
+              label="Metres d'acometida"
+              :readonly="!authStore.potEscriureFtth"
+            />
+          </v-col>
+          <v-col v-if="localitzacio.metresAcometida === 'altre'" cols="12" sm="6" md="4">
+            <v-text-field
+              v-model="localitzacio.metresAcometidaAltre"
+              label="Especifica els metres"
+              placeholder="Ex: 250"
               :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
@@ -185,6 +213,11 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Snackbar feedback de compartir -->
+    <v-snackbar v-model="mostrarSnackbarShare" timeout="2500">
+      {{ missatgeShare }}
+    </v-snackbar>
   </div>
 </template>
 
@@ -199,6 +232,7 @@ import FotoViewer from '@/components/ftth/FotoViewer.vue'
 import DialogInstalador from '@/components/ftth/DialogInstalador.vue'
 import DirtyGuardDialog from '@/components/shared/DirtyGuardDialog.vue'
 import { useDirtyGuard } from '@/composables/useDirtyGuard'
+import { useShareLink } from '@/composables/useShareLink'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
@@ -211,10 +245,18 @@ const detectantIP = ref(false)
 const dialogInstalador = ref(false)
 
 const { isDirty, pendingNavigation, pendingRouteChange, markDirty, markClean, resetGuard, confirmLeave, cancelLeave, guardRouteChange, confirmRouteChange, cancelRouteChange } = useDirtyGuard()
+const { compartir, compartint, missatge: missatgeShare } = useShareLink()
 
 const tipusOptions = [
   { value: 'permanent', label: 'Permanent' },
   { value: 'ocasional', label: 'Ocasional' },
+]
+
+const metresAcometidaOptions = [
+  { value: '30', label: '30 m' },
+  { value: '80', label: '80 m' },
+  { value: '200', label: '200 m' },
+  { value: 'altre', label: 'Altre' },
 ]
 
 const isNou = ref(false)
@@ -249,6 +291,16 @@ watch(() => route.params.id, (newId) => {
 watch(localitzacio, (nouValor, valorAntic) => {
   if (valorAntic !== null && nouValor !== null) markDirty()
 }, { deep: true })
+
+// Mostra el snackbar quan el composable de compartir emet un missatge
+const mostrarSnackbarShare = ref(false)
+watch(missatgeShare, (nou) => {
+  if (nou) mostrarSnackbarShare.value = true
+})
+
+function compartirEnllac() {
+  compartir(window.location.href, localitzacio.value?.nom || 'Localització FTTH')
+}
 
 const nomInstalador = computed(() => {
   if (!localitzacio.value) return ''

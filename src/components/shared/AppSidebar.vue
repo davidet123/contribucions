@@ -1,112 +1,112 @@
 <template>
   <nav class="app-sidebar" :class="{ 'sidebar-open': drawerOpen }">
-    <!-- Logo -->
-    <div class="sidebar-logo">
-      <img src="@/assets/images/a-punt-media-logo-blanco.png" class="logo-image" alt="À Punt Mèdia" />
+    <!-- Zona amb scroll: logo + totes les seccions de navegació -->
+    <div class="sidebar-scroll">
+      <!-- Logo -->
+      <div class="sidebar-logo">
+        <img src="@/assets/images/a-punt-media-logo-blanco.png" class="logo-image" alt="À Punt Mèdia" />
+      </div>
+
+      <div class="sidebar-divider" />
+
+      <!-- Inici -->
+      <router-link to="/" class="nav-item" :class="{ active: $route.path === '/' }" @click="tancarDrawer">
+        <v-icon size="18">mdi-home-outline</v-icon>
+        Inici
+      </router-link>
+
+      <div class="sidebar-divider" />
+
+      <!-- Nav: Retransmissions -->
+      <div class="sidebar-section-label">Retransmissions</div>
+      <router-link to="/retransmissions" class="nav-item" :class="{ active: $route.path === '/retransmissions' }" @click="tancarDrawer">
+        <v-icon size="18">mdi-broadcast</v-icon>
+        Totes les retransmissions
+      </router-link>
+      <router-link v-if="authStore.potEscriureTot" to="/retransmissions/nova" class="nav-item" :class="{ active: $route.path === '/retransmissions/nova' }" @click="tancarDrawer">
+        <v-icon size="18">mdi-plus-circle-outline</v-icon>
+        Nova retransmissió
+      </router-link>
+
+      <div class="sidebar-divider" />
+
+      <!-- Nav principal: Contribucions -->
+      <div class="sidebar-section-label">Contribucions</div>
+      <router-link to="/contribucions" class="nav-item" :class="{ active: $route.path === '/contribucions' }" @click="tancarDrawer">
+        <v-icon size="18">mdi-format-list-bulleted</v-icon>
+        Totes les contribucions
+      </router-link>
+      <router-link v-if="authStore.potEscriureTot" to="/contribucions/nova" class="nav-item" :class="{ active: $route.path === '/contribucions/nova' }" @click="tancarDrawer">
+        <v-icon size="18">mdi-plus-circle-outline</v-icon>
+        Nova contribució
+      </router-link>
+
+      <div class="sidebar-divider" />
+
+      <!-- Nav: FTTH -->
+      <div class="sidebar-section-label">Localitzacions FTTH</div>
+      <router-link to="/ftth" class="nav-item" :class="{ active: $route.path === '/ftth' }" @click="tancarDrawer">
+        <v-icon size="18">mdi-web</v-icon>
+        Totes les FTTH
+      </router-link>
+      <router-link v-if="authStore.potEscriureFtth" to="/ftth/nova" class="nav-item" :class="{ active: $route.path === '/ftth/nova' }" @click="tancarDrawer">
+        <v-icon size="18">mdi-plus-circle-outline</v-icon>
+        Nova FTTH
+      </router-link>
+
+      <div class="sidebar-divider" />
+
+      <!-- Nav: Localització -->
+      <div class="sidebar-section-label">Localització</div>
+      <router-link
+        to="/localitzacio"
+        class="nav-item"
+        :class="{ active: $route.path === '/localitzacio' }"
+        @click="tancarDrawer"
+      >
+        <v-icon size="18">mdi-map-marker-multiple-outline</v-icon>
+        Totes les localitzacions
+      </router-link>
+      <router-link
+        v-if="authStore.potEscriureTot"
+        to="/localitzacio/nova"
+        class="nav-item"
+        :class="{ active: $route.path === '/localitzacio/nova' }"
+        @click="tancarDrawer"
+      >
+        <v-icon size="18">mdi-plus-circle-outline</v-icon>
+        Nova localització
+      </router-link>
+
+      <div class="sidebar-divider" />
+
+      <!-- Catàleg -->
+      <div class="sidebar-section-label">Catàleg</div>
+      <router-link to="/cataleg/equips" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/equips') }" @click="tancarDrawer">
+        <v-icon size="18">mdi-server</v-icon>
+        Equips
+      </router-link>
+      <router-link to="/cataleg/tipus-equip" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/tipus-equip') }" @click="tancarDrawer">
+        <v-icon size="18">mdi-tag-multiple-outline</v-icon>
+        Tipus d'equip
+      </router-link>
+      <router-link to="/cataleg/cct" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/cct') }" @click="tancarDrawer">
+        <v-icon size="18">mdi-television-play</v-icon>
+        Recursos CCT
+      </router-link>
+
+      <!-- Admin -->
+      <template v-if="authStore.esAdmin">
+        <div class="sidebar-divider" />
+        <div class="sidebar-section-label">Administració</div>
+        <router-link to="/admin/usuaris" class="nav-item" :class="{ active: $route.path === '/admin/usuaris' }" @click="tancarDrawer">
+          <v-icon size="18">mdi-account-cog-outline</v-icon>
+          Crear usuari
+        </router-link>
+      </template>
     </div>
 
-    <div class="sidebar-divider" />
-
-    <!-- Inici -->
-    <router-link to="/" class="nav-item" :class="{ active: $route.path === '/' }" @click="tancarDrawer">
-      <v-icon size="18">mdi-home-outline</v-icon>
-      Inici
-    </router-link>
-
-    <div class="sidebar-divider" />
-
-    <!-- Nav: Retransmissions -->
-    <div class="sidebar-section-label">Retransmissions</div>
-    <router-link to="/retransmissions" class="nav-item" :class="{ active: $route.path === '/retransmissions' }" @click="tancarDrawer">
-      <v-icon size="18">mdi-broadcast</v-icon>
-      Totes les retransmissions
-    </router-link>
-    <router-link v-if="authStore.potEscriureTot" to="/retransmissions/nova" class="nav-item" :class="{ active: $route.path === '/retransmissions/nova' }" @click="tancarDrawer">
-      <v-icon size="18">mdi-plus-circle-outline</v-icon>
-      Nova retransmissió
-    </router-link>
-
-    <div class="sidebar-divider" />
-
-    <!-- Nav principal: Contribucions -->
-    <div class="sidebar-section-label">Contribucions</div>
-    <router-link to="/contribucions" class="nav-item" :class="{ active: $route.path === '/contribucions' }" @click="tancarDrawer">
-      <v-icon size="18">mdi-format-list-bulleted</v-icon>
-      Totes les contribucions
-    </router-link>
-    <router-link v-if="authStore.potEscriureTot" to="/contribucions/nova" class="nav-item" :class="{ active: $route.path === '/contribucions/nova' }" @click="tancarDrawer">
-      <v-icon size="18">mdi-plus-circle-outline</v-icon>
-      Nova contribució
-    </router-link>
-
-    <div class="sidebar-divider" />
-
-    <!-- Nav: FTTH -->
-    <div class="sidebar-section-label">Localitzacions FTTH</div>
-    <router-link to="/ftth" class="nav-item" :class="{ active: $route.path === '/ftth' }" @click="tancarDrawer">
-      <v-icon size="18">mdi-web</v-icon>
-      Totes les FTTH
-    </router-link>
-    <router-link v-if="authStore.potEscriureFtth" to="/ftth/nova" class="nav-item" :class="{ active: $route.path === '/ftth/nova' }" @click="tancarDrawer">
-      <v-icon size="18">mdi-plus-circle-outline</v-icon>
-      Nova FTTH
-    </router-link>
-
-    <div class="sidebar-divider" />
-
-    <!-- Nav: Localització -->
-    <div class="sidebar-section-label">Localització</div>
-    <router-link
-      to="/localitzacio"
-      class="nav-item"
-      :class="{ active: $route.path === '/localitzacio' }"
-      @click="tancarDrawer"
-    >
-      <v-icon size="18">mdi-map-marker-multiple-outline</v-icon>
-      Totes les localitzacions
-    </router-link>
-    <router-link
-      v-if="authStore.potEscriureTot"
-      to="/localitzacio/nova"
-      class="nav-item"
-      :class="{ active: $route.path === '/localitzacio/nova' }"
-      @click="tancarDrawer"
-    >
-      <v-icon size="18">mdi-plus-circle-outline</v-icon>
-      Nova localització
-    </router-link>
-
-    <div class="sidebar-divider" />
-
-    <!-- Catàleg -->
-    <div class="sidebar-section-label">Catàleg</div>
-    <router-link to="/cataleg/equips" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/equips') }" @click="tancarDrawer">
-      <v-icon size="18">mdi-server</v-icon>
-      Equips
-    </router-link>
-    <router-link to="/cataleg/tipus-equip" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/tipus-equip') }" @click="tancarDrawer">
-      <v-icon size="18">mdi-tag-multiple-outline</v-icon>
-      Tipus d'equip
-    </router-link>
-    <router-link to="/cataleg/cct" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/cct') }" @click="tancarDrawer">
-      <v-icon size="18">mdi-television-play</v-icon>
-      Recursos CCT
-    </router-link>
-
-    <!-- Admin -->
-    <template v-if="authStore.esAdmin">
-      <div class="sidebar-divider" />
-      <div class="sidebar-section-label">Administració</div>
-      <router-link to="/admin/usuaris" class="nav-item" :class="{ active: $route.path === '/admin/usuaris' }" @click="tancarDrawer">
-        <v-icon size="18">mdi-account-cog-outline</v-icon>
-        Crear usuari
-      </router-link>
-    </template>
-
-    <!-- Spacer -->
-    <div class="sidebar-spacer" />
-
-    <!-- Footer -->
+    <!-- Footer: sempre fixat a baix, fora de la zona amb scroll -->
     <div class="sidebar-footer">
       <UserSessionWidget />
       <div class="sidebar-footer-text">À Mèdia · v1.0.5</div>
@@ -136,7 +136,14 @@ function tancarDrawer() {
 <style scoped>
 .app-sidebar {
   width: 260px;
-  min-height: 100vh;
+  /* Fallback per a navegadors sense suport de dvh */
+  height: 100vh;
+  /* iOS Safari calcula 100vh com si la barra d'eines estigués oculta, deixant
+     el footer (logout) fora de l'àrea visible real mentre la barra és
+     visible. 100dvh s'ajusta dinàmicament a l'àrea visible real. Els
+     navegadors que no entenen dvh ignoren aquesta línia i es queden amb el
+     100vh anterior. */
+  height: 100dvh;
   background: #1A1A2E;
   position: fixed;
   left: 0;
@@ -145,8 +152,19 @@ function tancarDrawer() {
   flex-direction: column;
   z-index: 300;
   border-right: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
   /* Transició per a mòbil */
   transition: transform 0.25s ease;
+}
+
+/* Única zona amb scroll intern: si el contingut de navegació supera l'alçada
+   de la finestra, aquí apareix la barra de scroll, sense afectar el footer */
+.sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-logo {
@@ -206,12 +224,13 @@ function tancarDrawer() {
   border-left-color: #E8001C;
 }
 
-.sidebar-spacer {
-  flex: 1;
-}
-
 .sidebar-footer {
-  padding: 8px 0 12px;
+  flex-shrink: 0;
+  /* El padding inferior suma l'alçada de la zona de gestos d'iOS (home
+     indicator) perquè el botó de logout mai quede tapat ni dins d'aquesta
+     franja reservada pel sistema. env() torna 0 en navegadors sense safe
+     area, així que no afecta a la resta de dispositius. */
+  padding: 8px 0 calc(12px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid rgba(255,255,255,0.07);
 }
 
