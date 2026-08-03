@@ -11,7 +11,7 @@
       <div class="grup-header">
         <div class="grup-header-left">
           <!-- Logo opcional -->
-          <div class="grup-logo-area" @click="triggerLogoUpload(grup)" title="Afegir logo">
+          <div class="grup-logo-area" @click="authStore.potEscriureTot && triggerLogoUpload(grup)" title="Afegir logo">
             <img v-if="getLogoSrc(grup)" :src="getLogoSrc(grup)" class="grup-logo-img" />
             <v-icon v-else size="18" color="grey-lighten-2">mdi-image-outline</v-icon>
             <input
@@ -27,14 +27,15 @@
             hide-details
             placeholder="TEATRE PRINCIPAL D'ALACANT, MOTXILLA REPORTER..."
             style="min-width: 280px"
+            :readonly="!authStore.potEscriureTot"
             @change="emitUpdate"
           />
         </div>
         <div class="grup-header-right">
-          <v-btn v-if="getLogoSrc(grup)" size="x-small" variant="text" color="error" @click="esborrarLogo(grup)">
+          <v-btn v-if="getLogoSrc(grup) && authStore.potEscriureTot" size="x-small" variant="text" color="error" @click="esborrarLogo(grup)">
             <v-icon size="14">mdi-image-remove</v-icon>
           </v-btn>
-          <v-btn icon size="x-small" variant="text" color="error" @click="eliminarGrup(gi)">
+          <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarGrup(gi)">
             <v-icon size="14">mdi-delete-outline</v-icon>
           </v-btn>
         </div>
@@ -56,6 +57,7 @@
               hide-details
               placeholder="TIELINE GATEWAY Codec 1"
               style="min-width: 200px; max-width: 240px"
+              :readonly="!authStore.potEscriureTot"
               @change="emitUpdate"
             />
 
@@ -69,6 +71,7 @@
               density="compact"
               hide-details
               style="max-width: 150px"
+              :readonly="!authStore.potEscriureTot"
               @update:model-value="onUbicacioChange(linia)"
             />
 
@@ -83,9 +86,10 @@
               hide-details
               clearable
               style="min-width: 180px"
+              :readonly="!authStore.potEscriureTot"
               @update:model-value="onRecursDestiChange(linia, $event)"
             >
-              <template #append-item>
+              <template v-if="authStore.potEscriureTot" #append-item>
                 <v-divider />
                 <v-list-item @click="obrirNouRecurs(linia)" class="mt-1">
                   <template #prepend><v-icon size="16" color="primary">mdi-plus</v-icon></template>
@@ -95,7 +99,7 @@
             </v-autocomplete>
 
             <!-- Eliminar línia -->
-            <v-btn icon size="x-small" variant="text" color="error" @click="eliminarLinia(grup, li)">
+            <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarLinia(grup, li)">
               <v-icon size="12">mdi-close</v-icon>
             </v-btn>
           </div>
@@ -110,6 +114,7 @@
                 hide-details
                 variant="outlined"
                 placeholder="PRE-FADER FERRAN (buit = no es mostra)"
+                :readonly="!authStore.potEscriureTot"
                 @change="emitUpdate"
               />
             </div>
@@ -121,6 +126,7 @@
                 hide-details
                 variant="outlined"
                 placeholder="N-1 + ORDRES A FERRAN (buit = no es mostra)"
+                :readonly="!authStore.potEscriureTot"
                 @change="emitUpdate"
               />
             </div>
@@ -143,6 +149,7 @@
 
         <!-- Botó afegir línia -->
         <v-btn
+          v-if="authStore.potEscriureTot"
           size="x-small"
           variant="text"
           color="primary"
@@ -156,7 +163,7 @@
     </div>
 
     <!-- Botó afegir grup -->
-    <v-btn variant="outlined" color="primary" prepend-icon="mdi-plus" class="mt-2" @click="afegirGrup">
+    <v-btn v-if="authStore.potEscriureTot" variant="outlined" color="primary" prepend-icon="mdi-plus" class="mt-2" @click="afegirGrup">
       Afegir origen de comunicació
     </v-btn>
 
@@ -173,6 +180,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useCatalegStore } from '@/stores/cataleg'
+import { useAuthStore } from '@/stores/auth'
 import { UBICACIONS_COM } from '@/utils/constants'
 import { imageStorage, fileToBase64 } from '@/utils/storage'
 import DialogNouRecursCom from '@/components/cataleg/DialogNouRecursCom.vue'
@@ -180,6 +188,7 @@ import DialogNouRecursCom from '@/components/cataleg/DialogNouRecursCom.vue'
 const props = defineProps({ contribucio: Object })
 const emit = defineEmits(['update'])
 const cataleg = useCatalegStore()
+const authStore = useAuthStore()
 
 const comunicacionsLocal = ref(JSON.parse(JSON.stringify(props.contribucio.comunicacions || [])))
 

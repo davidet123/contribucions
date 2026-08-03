@@ -43,6 +43,7 @@
               label="Nom de la localització *"
               placeholder="Estadi de Mestalla, Palau de les Arts..."
               :rules="[v => !!v || 'El nom és obligatori']"
+              :readonly="!authStore.potEscriureTot"
             />
           </v-col>
           <v-col cols="12" md="5">
@@ -50,6 +51,7 @@
               v-model="localitzacio.adreca"
               label="Adreça"
               placeholder="Carrer, número, codi postal, localitat..."
+              :readonly="!authStore.potEscriureTot"
             />
           </v-col>
         </v-row>
@@ -64,6 +66,7 @@
           rows="6"
           auto-grow
           placeholder="Accés, aparcament, contactes habituals, incidències, etc."
+          :readonly="!authStore.potEscriureTot"
         />
       </div>
 
@@ -89,6 +92,7 @@
                   density="compact"
                   hide-details
                   placeholder="Nom i cognoms"
+                  :readonly="!authStore.potEscriureTot"
                 />
               </v-col>
               <v-col cols="12" sm="6" md="3">
@@ -99,6 +103,7 @@
                   hide-details
                   placeholder="6xx xxx xxx"
                   prepend-inner-icon="mdi-phone-outline"
+                  :readonly="!authStore.potEscriureTot"
                 />
               </v-col>
               <v-col cols="12" sm="6" md="3">
@@ -109,6 +114,7 @@
                   hide-details
                   placeholder="nom@domini.com"
                   prepend-inner-icon="mdi-email-outline"
+                  :readonly="!authStore.potEscriureTot"
                 />
               </v-col>
               <v-col cols="12" sm="6" md="3">
@@ -118,10 +124,12 @@
                   density="compact"
                   hide-details
                   placeholder="Responsable accés, guarda..."
+                  :readonly="!authStore.potEscriureTot"
                 />
               </v-col>
             </v-row>
             <v-btn
+              v-if="authStore.potEscriureTot"
               icon
               variant="text"
               color="error"
@@ -140,6 +148,7 @@
         </div>
 
         <v-btn
+          v-if="authStore.potEscriureTot"
           variant="outlined"
           prepend-icon="mdi-plus"
           size="small"
@@ -164,6 +173,7 @@
             density="compact"
             hide-details
             color="primary"
+            :readonly="!authStore.potEscriureTot"
           />
         </div>
         <div v-if="transportAltreSel" class="mt-4">
@@ -172,6 +182,7 @@
             label="Especifica el transport alternatiu"
             density="compact"
             placeholder="Descripció del transport..."
+            :readonly="!authStore.potEscriureTot"
           />
         </div>
       </div>
@@ -185,6 +196,7 @@
           rows="4"
           auto-grow
           placeholder="PGM, CF, isolada càmera 1, dron..."
+          :readonly="!authStore.potEscriureTot"
         />
       </div>
 
@@ -197,6 +209,7 @@
               v-model="localitzacio.produccio"
               label="Qui porta la producció"
               placeholder="À Punt pròpia, nom productora, empresa externa, VMix amb racks..."
+              :readonly="!authStore.potEscriureTot"
             />
           </v-col>
           <v-col cols="12" md="4">
@@ -206,6 +219,7 @@
               item-title="label"
               item-value="value"
               label="Tipus de producció"
+              :readonly="!authStore.potEscriureTot"
             />
           </v-col>
         </v-row>
@@ -233,6 +247,7 @@
                   density="compact"
                   hide-details
                   placeholder="Codec, switch, router..."
+                  :readonly="!authStore.potEscriureTot"
                 />
               </v-col>
               <v-col cols="6" sm="2">
@@ -243,6 +258,7 @@
                   min="1"
                   density="compact"
                   hide-details
+                  :readonly="!authStore.potEscriureTot"
                 />
               </v-col>
               <v-col cols="6" sm="5">
@@ -252,10 +268,12 @@
                   density="compact"
                   hide-details
                   placeholder="Model, configuració..."
+                  :readonly="!authStore.potEscriureTot"
                 />
               </v-col>
             </v-row>
             <v-btn
+              v-if="authStore.potEscriureTot"
               icon
               variant="text"
               color="error"
@@ -274,6 +292,7 @@
         </div>
 
         <v-btn
+          v-if="authStore.potEscriureTot"
           variant="outlined"
           prepend-icon="mdi-plus"
           size="small"
@@ -288,12 +307,14 @@
       <div class="bloc-card">
         <div class="bloc-card-title">Fotos</div>
         <FotoUploader
+          v-if="authStore.potEscriureTot"
           :fotos="localitzacio.fotos || []"
           :max-fotos="10"
           @afegir="afegirFoto"
           @eliminar="eliminarFoto"
           @actualitzar-nota="actualitzarNotaFoto"
         />
+        <FotoViewer v-else :fotos="localitzacio.fotos || []" />
       </div>
     </div>
 
@@ -328,6 +349,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useLocalitzacioStore } from '@/stores/localitzacio'
 import { v4 as uuidv4 } from 'uuid'
 import FotoUploader from '@/components/ftth/FotoUploader.vue'
+import FotoViewer from '@/components/ftth/FotoViewer.vue'
 import DirtyGuardDialog from '@/components/shared/DirtyGuardDialog.vue'
 import { useDirtyGuard } from '@/composables/useDirtyGuard'
 import { useAuthStore } from '@/stores/auth'

@@ -13,9 +13,10 @@
           hide-details
           placeholder="PGM, CLEAN FEED, POOL..."
           style="max-width: 280px"
+          :readonly="!authStore.potEscriureTot"
           @change="emitUpdate"
         />
-        <v-btn icon size="x-small" variant="text" color="error" @click="eliminar(si)">
+        <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminar(si)">
           <v-icon size="14">mdi-delete-outline</v-icon>
         </v-btn>
       </div>
@@ -37,6 +38,7 @@
                 density="compact"
                 hide-details
                 variant="plain"
+                :readonly="!authStore.potEscriureTot"
                 @update:model-value="emitUpdate"
               />
             </td>
@@ -50,6 +52,7 @@
                 density="compact"
                 hide-details
                 variant="plain"
+                :readonly="!authStore.potEscriureTot"
                 @update:model-value="emitUpdate"
               />
             </td>
@@ -59,7 +62,7 @@
 
       <!-- Afegir àudio extra -->
       <v-btn
-        v-if="senyal.audios.length < 8"
+        v-if="senyal.audios.length < 8 && authStore.potEscriureTot"
         size="x-small"
         variant="text"
         prepend-icon="mdi-plus"
@@ -67,7 +70,7 @@
         @click="afegirAudio(senyal)"
       >Afegir àudio</v-btn>
       <v-btn
-        v-if="senyal.audios.length > 2"
+        v-if="senyal.audios.length > 2 && authStore.potEscriureTot"
         size="x-small"
         variant="text"
         color="error"
@@ -76,7 +79,7 @@
       >Treure àudio</v-btn>
     </div>
 
-    <v-btn variant="outlined" color="primary" prepend-icon="mdi-plus" class="mt-2" @click="afegir">
+    <v-btn v-if="authStore.potEscriureTot" variant="outlined" color="primary" prepend-icon="mdi-plus" class="mt-2" @click="afegir">
       Afegir senyal
     </v-btn>
   </div>
@@ -86,9 +89,11 @@
 import { ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { CONTINGUTS_AUDIO } from '@/utils/constants'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({ contribucio: Object })
 const emit = defineEmits(['update'])
+const authStore = useAuthStore()
 
 const senyalsLocal = ref(JSON.parse(JSON.stringify(props.contribucio.senyals || [])))
 

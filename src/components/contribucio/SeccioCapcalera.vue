@@ -20,7 +20,7 @@
             </div>
           </div>
           <v-btn
-            v-if="logoPreview"
+            v-if="logoPreview && authStore.potEscriureTot"
             size="x-small"
             variant="text"
             color="error"
@@ -51,7 +51,7 @@
             </div>
           </div>
           <v-btn
-            v-if="imatgePreview"
+            v-if="imatgePreview && authStore.potEscriureTot"
             size="x-small"
             variant="text"
             color="error"
@@ -70,6 +70,7 @@
             <v-text-field
               :model-value="contribucio.nomPrograma"
               label="Nom del programa *"
+              :readonly="!authStore.potEscriureTot"
               @update:model-value="emit('update', { nomPrograma: $event })"
             />
           </v-col>
@@ -77,6 +78,7 @@
             <v-text-field
               :model-value="contribucio.subtitol"
               label="Subtítol / descripció"
+              :readonly="!authStore.potEscriureTot"
               @update:model-value="emit('update', { subtitol: $event })"
             />
           </v-col>
@@ -85,6 +87,7 @@
               :model-value="contribucio.dataEmissio"
               label="Data d'emissió"
               placeholder="DD/MM/AAAA"
+              :readonly="!authStore.potEscriureTot"
               @update:model-value="emit('update', { dataEmissio: $event })"
             />
           </v-col>
@@ -93,6 +96,7 @@
               :model-value="contribucio.horariEmissio"
               label="Horari"
               placeholder="HH:MM"
+              :readonly="!authStore.potEscriureTot"
               @update:model-value="emit('update', { horariEmissio: $event })"
             />
           </v-col>
@@ -100,6 +104,7 @@
             <v-text-field
               :model-value="contribucio.origenSenyal"
               label="Origen del senyal"
+              :readonly="!authStore.potEscriureTot"
               @update:model-value="emit('update', { origenSenyal: $event })"
             />
           </v-col>
@@ -108,6 +113,7 @@
               :model-value="contribucio.plataforma"
               :items="plataformes"
               label="Plataforma"
+              :readonly="!authStore.potEscriureTot"
               @update:model-value="emit('update', { plataforma: $event })"
             />
           </v-col>
@@ -124,6 +130,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { imageStorage, fileToBase64 } from '@/utils/storage'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
 
 const props = defineProps({
   contribucio: { type: Object, required: true },
@@ -148,6 +157,7 @@ onMounted(() => {
 })
 
 function triggerInput(tipus) {
+  if (!authStore.potEscriureTot) return
   if (tipus === 'logo') inputLogo.value?.click()
   else inputLloc.value?.click()
 }

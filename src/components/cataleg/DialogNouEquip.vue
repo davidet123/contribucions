@@ -7,7 +7,7 @@
       <v-card-text>
         <v-row dense>
           <v-col cols="12">
-            <v-text-field v-model="form.nom" label="Nom de l'equip" placeholder="FC 6, MAKITO 25..." autofocus />
+            <v-text-field v-model="form.nom" label="Nom de l'equip" placeholder="FC 6, MAKITO 25..." autofocus :readonly="!authStore.potEscriureTot" />
           </v-col>
           <v-col cols="12">
             <v-select
@@ -16,10 +16,11 @@
               item-title="nom"
               item-value="id"
               label="Tipus d'equip"
+              :readonly="!authStore.potEscriureTot"
             />
           </v-col>
           <v-col cols="12">
-            <v-text-field v-model="form.notes" label="Notes" placeholder="Opcional" />
+            <v-text-field v-model="form.notes" label="Notes" placeholder="Opcional" :readonly="!authStore.potEscriureTot" />
           </v-col>
         </v-row>
 
@@ -37,7 +38,7 @@
       <v-card-actions class="pa-4 pt-0">
         <v-spacer />
         <v-btn variant="text" @click="tancar">Cancel·lar</v-btn>
-        <v-btn color="primary" :disabled="!form.nom || !form.tipusId" @click="desar">
+        <v-btn v-if="authStore.potEscriureTot" color="primary" :disabled="!form.nom || !form.tipusId" @click="desar">
           {{ equipEditat ? 'Desar canvis' : 'Crear equip' }}
         </v-btn>
       </v-card-actions>
@@ -48,6 +49,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useCatalegStore } from '@/stores/cataleg'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -55,6 +57,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue', 'creat', 'editat'])
 const cataleg = useCatalegStore()
+const authStore = useAuthStore()
 
 const form = ref({ nom: '', tipusId: '', notes: '' })
 

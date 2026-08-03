@@ -5,10 +5,10 @@
       <v-card-text>
         <v-row dense>
           <v-col cols="12">
-            <v-text-field v-model="form.nom" label="Nom del recurs" placeholder="CODEC 9.1, INTERCOM EST4..." autofocus />
+            <v-text-field v-model="form.nom" label="Nom del recurs" placeholder="CODEC 9.1, INTERCOM EST4..." autofocus :readonly="!authStore.potEscriureTot" />
           </v-col>
           <v-col cols="6">
-            <v-select v-model="form.tipus" :items="TIPUS_RECURS_COM" item-title="label" item-value="value" label="Tipus" />
+            <v-select v-model="form.tipus" :items="TIPUS_RECURS_COM" item-title="label" item-value="value" label="Tipus" :readonly="!authStore.potEscriureTot" />
           </v-col>
           <v-col cols="6">
             <v-combobox
@@ -19,17 +19,18 @@
               label="Ubicació"
               hint="Selecciona o escriu una ubicació nova"
               persistent-hint
+              :readonly="!authStore.potEscriureTot"
             />
           </v-col>
           <v-col cols="12">
-            <v-text-field v-model="form.extensio" label="Extensió / telèfon SIP" placeholder="963 189 426" />
+            <v-text-field v-model="form.extensio" label="Extensió / telèfon SIP" placeholder="963 189 426" :readonly="!authStore.potEscriureTot" />
           </v-col>
         </v-row>
       </v-card-text>
       <v-card-actions class="pa-4 pt-0">
         <v-spacer />
         <v-btn variant="text" @click="$emit('update:modelValue', false)">Cancel·lar</v-btn>
-        <v-btn color="primary" :disabled="!form.nom" @click="crear">Crear</v-btn>
+        <v-btn v-if="authStore.potEscriureTot" color="primary" :disabled="!form.nom" @click="crear">Crear</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -39,6 +40,7 @@
 import { ref, computed, watch } from 'vue'
 import { useCatalegStore } from '@/stores/cataleg'
 import { TIPUS_RECURS_COM, UBICACIONS_COM } from '@/utils/constants'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -46,6 +48,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue', 'creat'])
 const cataleg = useCatalegStore()
+const authStore = useAuthStore()
 
 const form = ref({ nom: '', tipus: 'codec_ip', ubicacio: props.ubicacioInicial || 'cct', extensio: '' })
 

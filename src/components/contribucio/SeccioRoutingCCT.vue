@@ -14,9 +14,10 @@
           hide-details
           placeholder="INGESTA, CONTINUÏTAT, E. POLIVALENT, ESTUDI 3..."
           style="max-width: 260px"
+          :readonly="!authStore.potEscriureTot"
           @change="emitUpdate"
         />
-        <v-btn icon size="x-small" variant="text" color="error" @click="eliminarBloc(bi)">
+        <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarBloc(bi)">
           <v-icon size="14">mdi-delete-outline</v-icon>
         </v-btn>
       </div>
@@ -25,7 +26,7 @@
       <div class="vies-section mt-2">
         <div class="vies-header">
           <span class="vies-title">Vies</span>
-          <v-btn size="x-small" variant="text" color="primary" prepend-icon="mdi-plus" @click="afegirVia(bloc)">
+          <v-btn v-if="authStore.potEscriureTot" size="x-small" variant="text" color="primary" prepend-icon="mdi-plus" @click="afegirVia(bloc)">
             Afegir via
           </v-btn>
         </div>
@@ -40,6 +41,7 @@
             density="compact"
             hide-details
             style="max-width: 100px"
+            :readonly="!authStore.potEscriureTot"
             @update:model-value="emitUpdate"
           />
 
@@ -50,6 +52,7 @@
             density="compact"
             hide-details
             style="max-width: 180px"
+            :readonly="!authStore.potEscriureTot"
             @change="emitUpdate"
           />
 
@@ -60,6 +63,7 @@
             placeholder="POOL, PGM E. POLIVALENT..."
             density="compact"
             hide-details
+            :readonly="!authStore.potEscriureTot"
             @update:model-value="emitUpdate"
           />
 
@@ -76,9 +80,10 @@
             placeholder="UM 5, MAKITO 23..."
             clearable
             style="max-width: 160px"
+            :readonly="!authStore.potEscriureTot"
             @update:model-value="onDestiChange(via, $event)"
           >
-            <template #append-item>
+            <template v-if="authStore.potEscriureTot" #append-item>
               <v-divider />
               <v-list-item @click="obrirDialogNouDesti(via)">
                 <template #prepend><v-icon size="16" color="primary">mdi-plus</v-icon></template>
@@ -94,10 +99,11 @@
             density="compact"
             hide-details
             style="max-width: 140px"
+            :readonly="!authStore.potEscriureTot"
             @change="emitUpdate"
           />
 
-          <v-btn icon size="x-small" variant="text" color="error" @click="eliminarVia(bloc, vi)">
+          <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarVia(bloc, vi)">
             <v-icon size="12">mdi-close</v-icon>
           </v-btn>
           <div v-if="via.destiCCTId || via.destiCCTNom" class="via-notes-row">
@@ -109,6 +115,7 @@
               variant="plain"
               class="via-notes-field"
               prepend-inner-icon="mdi-note-text-outline"
+              :readonly="!authStore.potEscriureTot"
               @change="emitUpdate"
             />
           </div>
@@ -116,7 +123,7 @@
       </div>
     </div>
 
-    <v-btn variant="outlined" color="primary" prepend-icon="mdi-plus" class="mt-2" @click="afegirBloc">
+    <v-btn v-if="authStore.potEscriureTot" variant="outlined" color="primary" prepend-icon="mdi-plus" class="mt-2" @click="afegirBloc">
       Afegir recurs intern CCT
     </v-btn>
 
@@ -124,8 +131,8 @@
     <div class="mt-6">
       <div class="bloc-card-title">Fonts externes (URLs)</div>
       <div v-for="(font, fi) in fontsLocal" :key="font.id" class="font-row">
-        <v-text-field v-model="font.nom" label="Nom" density="compact" hide-details placeholder="HERO 1..." @change="emitUpdate" />
-        <v-text-field v-model="font.url" label="URL (HLS/SRT)" density="compact" hide-details placeholder="https://..." @change="emitUpdate" />
+        <v-text-field v-model="font.nom" label="Nom" density="compact" hide-details placeholder="HERO 1..." :readonly="!authStore.potEscriureTot" @change="emitUpdate" />
+        <v-text-field v-model="font.url" label="URL (HLS/SRT)" density="compact" hide-details placeholder="https://..." :readonly="!authStore.potEscriureTot" @change="emitUpdate" />
         <v-autocomplete
           v-model="font.destiCCTId"
           :items="destinsCCT"
@@ -135,13 +142,14 @@
           density="compact"
           hide-details
           clearable
+          :readonly="!authStore.potEscriureTot"
           @update:model-value="emitUpdate"
         />
-        <v-btn icon size="x-small" variant="text" color="error" @click="eliminarFont(fi)">
+        <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarFont(fi)">
           <v-icon size="12">mdi-close</v-icon>
         </v-btn>
       </div>
-      <v-btn variant="outlined" color="secondary" prepend-icon="mdi-link-plus" size="small" class="mt-2" @click="afegirFont">
+      <v-btn v-if="authStore.potEscriureTot" variant="outlined" color="secondary" prepend-icon="mdi-link-plus" size="small" class="mt-2" @click="afegirFont">
         Afegir font externa
       </v-btn>
     </div>
@@ -155,10 +163,12 @@ import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useCatalegStore } from '@/stores/cataleg'
 import DialogNouDestiCCT from '@/components/cataleg/DialogNouDestiCCT.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({ contribucio: Object })
 const emit = defineEmits(['update'])
 const cataleg = useCatalegStore()
+const authStore = useAuthStore()
 
 const routingLocal = ref(JSON.parse(JSON.stringify(props.contribucio.routingCCT || [])))
 const fontsLocal = ref(JSON.parse(JSON.stringify(props.contribucio.fontsExternes || [])))

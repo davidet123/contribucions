@@ -109,7 +109,7 @@
     <!-- Footer -->
     <div class="sidebar-footer">
       <UserSessionWidget />
-      <div class="sidebar-footer-text">À Mèdia · v1.0.4</div>
+      <div class="sidebar-footer-text">À Mèdia · v1.0.5</div>
     </div>
   </nav>
 </template>

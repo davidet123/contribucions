@@ -54,7 +54,7 @@
         Cancel·lar
       </v-btn>
       <v-btn
-        v-if="estat === 'done'"
+        v-if="estat === 'done' && authStore.potEscriureFtth"
         color="success"
         size="small"
         variant="tonal"
@@ -80,6 +80,9 @@
 <script setup>
 import { ref, computed } from 'vue'
 import dayjs from 'dayjs'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
 
 const props = defineProps({
   historial: { type: Array, default: () => [] },

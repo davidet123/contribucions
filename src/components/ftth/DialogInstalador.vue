@@ -48,7 +48,7 @@
             <div class="inst-telefon">
               <v-icon size="12">mdi-phone-outline</v-icon> {{ inst.telefon || '—' }}
             </div>
-            <div class="inst-actions" @click.stop>
+            <div v-if="authStore.potEscriureFtth" class="inst-actions" @click.stop>
               <v-btn icon size="x-small" variant="text" @click="editarInstalador(inst)">
                 <v-icon size="14">mdi-pencil-outline</v-icon>
               </v-btn>
@@ -64,16 +64,16 @@
           <div class="form-title">{{ editant ? 'Editar instal·lador' : 'Nou instal·lador' }}</div>
           <v-row dense>
             <v-col cols="12" sm="6">
-              <v-text-field v-model="form.nom" label="Nom *" density="compact" variant="outlined" hide-details />
+              <v-text-field v-model="form.nom" label="Nom *" density="compact" variant="outlined" hide-details :readonly="!authStore.potEscriureFtth" />
             </v-col>
             <v-col cols="12" sm="6">
-              <v-text-field v-model="form.telefon" label="Telèfon" density="compact" variant="outlined" hide-details />
+              <v-text-field v-model="form.telefon" label="Telèfon" density="compact" variant="outlined" hide-details :readonly="!authStore.potEscriureFtth" />
             </v-col>
             <v-col cols="12" sm="6">
-              <v-text-field v-model="form.empresa" label="Empresa" density="compact" variant="outlined" hide-details />
+              <v-text-field v-model="form.empresa" label="Empresa" density="compact" variant="outlined" hide-details :readonly="!authStore.potEscriureFtth" />
             </v-col>
             <v-col cols="12" sm="6">
-              <v-text-field v-model="form.localitat" label="Localitat / Zona" density="compact" variant="outlined" hide-details />
+              <v-text-field v-model="form.localitat" label="Localitat / Zona" density="compact" variant="outlined" hide-details :readonly="!authStore.potEscriureFtth" />
             </v-col>
           </v-row>
           <div class="form-actions">
@@ -89,7 +89,7 @@
 
       <v-card-actions class="pa-3">
         <v-btn
-          v-if="!mostrantFormulari"
+          v-if="!mostrantFormulari && authStore.potEscriureFtth"
           size="small"
           variant="tonal"
           prepend-icon="mdi-plus"
@@ -132,6 +132,7 @@
 import { ref, computed } from 'vue'
 import { useFtthStore } from '@/stores/ftth'
 import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -140,6 +141,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'seleccionar'])
 
 const store = useFtthStore()
+const authStore = useAuthStore()
 const { instaladors } = storeToRefs(store)
 
 const cerca = ref('')

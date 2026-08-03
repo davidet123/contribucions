@@ -61,7 +61,7 @@
         <v-card-text>
           <v-row dense>
             <v-col cols="8">
-              <v-text-field v-model="form.nom" label="Nom" autofocus density="compact" />
+              <v-text-field v-model="form.nom" label="Nom" autofocus density="compact" :readonly="!authStore.potEscriureTot" />
             </v-col>
             <v-col cols="4">
               <v-select
@@ -71,17 +71,18 @@
                 item-value="value"
                 label="Categoria"
                 density="compact"
+                :readonly="!authStore.potEscriureTot"
               />
             </v-col>
             <v-col cols="12">
-              <v-text-field v-model="form.descripcio" label="Descripció" density="compact" />
+              <v-text-field v-model="form.descripcio" label="Descripció" density="compact" :readonly="!authStore.potEscriureTot" />
             </v-col>
           </v-row>
 
           <!-- Vies per defecte editables -->
           <div class="vies-editor-header">
             <span class="bloc-card-title">Vies per defecte</span>
-            <v-btn size="x-small" variant="text" color="primary" prepend-icon="mdi-plus" @click="afegirVia">
+            <v-btn v-if="authStore.potEscriureTot" size="x-small" variant="text" color="primary" prepend-icon="mdi-plus" @click="afegirVia">
               Afegir via
             </v-btn>
           </div>
@@ -104,6 +105,7 @@
                 density="compact"
                 hide-details
                 style="max-width: 100px"
+                :readonly="!authStore.potEscriureTot"
               />
 
               <!-- Etiqueta -->
@@ -112,20 +114,21 @@
                 placeholder="PGM, CLEAN FEED..."
                 density="compact"
                 hide-details
+                :readonly="!authStore.potEscriureTot"
               />
 
               <!-- Moure amunt -->
-              <v-btn icon size="x-small" variant="text" :disabled="vi === 0" @click="moureAmunt(vi)">
+              <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" :disabled="vi === 0" @click="moureAmunt(vi)">
                 <v-icon size="12">mdi-arrow-up</v-icon>
               </v-btn>
 
               <!-- Moure avall -->
-              <v-btn icon size="x-small" variant="text" :disabled="vi === form.viesDefecte.length - 1" @click="moureAvall(vi)">
+              <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" :disabled="vi === form.viesDefecte.length - 1" @click="moureAvall(vi)">
                 <v-icon size="12">mdi-arrow-down</v-icon>
               </v-btn>
 
               <!-- Eliminar via -->
-              <v-btn icon size="x-small" variant="text" color="error" @click="eliminarVia(vi)">
+              <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarVia(vi)">
                 <v-icon size="12">mdi-close</v-icon>
               </v-btn>
             </div>
@@ -147,7 +150,7 @@
         <v-card-actions class="pa-4 pt-0">
           <v-spacer />
           <v-btn variant="text" @click="tancarDialog">Cancel·lar</v-btn>
-          <v-btn color="primary" :disabled="!form.nom" @click="desar">
+          <v-btn v-if="authStore.potEscriureTot" color="primary" :disabled="!form.nom" @click="desar">
             {{ editantId ? 'Desar canvis' : 'Crear' }}
           </v-btn>
         </v-card-actions>

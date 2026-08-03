@@ -4,14 +4,14 @@
 
     <!-- Contactes -->
     <div v-for="(c, ci) in contactesLocal" :key="c.id" class="contacte-row">
-      <v-text-field v-model="c.rol" label="Rol" density="compact" hide-details placeholder="Tècnic in situ, Producció..." @change="emitUpdate" style="max-width: 200px" />
-      <v-text-field v-model="c.nom" label="Nom" density="compact" hide-details @change="emitUpdate" />
-      <v-text-field v-model="c.telefon" label="Telèfon" density="compact" hide-details @change="emitUpdate" style="max-width: 160px" />
-      <v-btn icon size="x-small" variant="text" color="error" @click="eliminarContacte(ci)">
+      <v-text-field v-model="c.rol" label="Rol" density="compact" hide-details placeholder="Tècnic in situ, Producció..." :readonly="!authStore.potEscriureTot" @change="emitUpdate" style="max-width: 200px" />
+      <v-text-field v-model="c.nom" label="Nom" density="compact" hide-details :readonly="!authStore.potEscriureTot" @change="emitUpdate" />
+      <v-text-field v-model="c.telefon" label="Telèfon" density="compact" hide-details :readonly="!authStore.potEscriureTot" @change="emitUpdate" style="max-width: 160px" />
+      <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarContacte(ci)">
         <v-icon size="14">mdi-delete-outline</v-icon>
       </v-btn>
     </div>
-    <v-btn variant="outlined" color="secondary" prepend-icon="mdi-account-plus-outline" size="small" class="mt-2 mb-4" @click="afegirContacte">
+    <v-btn v-if="authStore.potEscriureTot" variant="outlined" color="secondary" prepend-icon="mdi-account-plus-outline" size="small" class="mt-2 mb-4" @click="afegirContacte">
       Afegir contacte
     </v-btn>
 
@@ -24,14 +24,15 @@
         density="compact"
         hide-details
         placeholder="CCT ha de replicar àudios 1 i 2..."
+        :readonly="!authStore.potEscriureTot"
         @change="emitUpdate"
       />
-      <v-checkbox v-model="nota.important" density="compact" hide-details color="error" title="Important (requadre)" />
-      <v-btn icon size="x-small" variant="text" color="error" @click="eliminarNota(ni)">
+      <v-checkbox v-model="nota.important" density="compact" hide-details color="error" title="Important (requadre)" :readonly="!authStore.potEscriureTot" />
+      <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarNota(ni)">
         <v-icon size="14">mdi-delete-outline</v-icon>
       </v-btn>
     </div>
-    <v-btn variant="outlined" color="secondary" prepend-icon="mdi-note-plus-outline" size="small" class="mt-2" @click="afegirNota">
+    <v-btn v-if="authStore.potEscriureTot" variant="outlined" color="secondary" prepend-icon="mdi-note-plus-outline" size="small" class="mt-2" @click="afegirNota">
       Afegir nota
     </v-btn>
   </div>
@@ -40,9 +41,11 @@
 <script setup>
 import { ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({ contribucio: Object })
 const emit = defineEmits(['update'])
+const authStore = useAuthStore()
 
 const contactesLocal = ref(JSON.parse(JSON.stringify(props.contribucio.contactes || [])))
 const notesLocal = ref(JSON.parse(JSON.stringify(props.contribucio.notes || [])))

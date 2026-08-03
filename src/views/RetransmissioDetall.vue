@@ -37,11 +37,12 @@
         <div class="bloc-card-title">Dades generals</div>
         <v-row dense>
           <v-col cols="12" md="8">
-            <v-text-field v-model="retransmissio.nom" label="Nom de la retransmissió *" placeholder="Volta CV Etapa 3, Pleno Corts..." />
+            <v-text-field v-model="retransmissio.nom" label="Nom de la retransmissió *" placeholder="Volta CV Etapa 3, Pleno Corts..." :readonly="!authStore.potEscriureTot" />
           </v-col>
           <v-col cols="12" md="4">
             <v-select
               v-model="retransmissio.estat"
+              :readonly="!authStore.potEscriureTot"
               :items="ESTATS"
               item-title="label"
               item-value="value"
@@ -60,13 +61,13 @@
             </v-select>
           </v-col>
           <v-col cols="12" md="6">
-            <v-text-field v-model="retransmissio.programa" label="Programa / producció" placeholder="Volta a la Comunitat, Debat electoral..." />
+            <v-text-field v-model="retransmissio.programa" label="Programa / producció" placeholder="Volta a la Comunitat, Debat electoral..." :readonly="!authStore.potEscriureTot" />
           </v-col>
           <v-col cols="6" md="3">
-            <v-text-field v-model="retransmissio.data" label="Data" type="date" />
+            <v-text-field v-model="retransmissio.data" label="Data" type="date" :readonly="!authStore.potEscriureTot" />
           </v-col>
           <v-col cols="6" md="3">
-            <v-text-field v-model="retransmissio.hora" label="Hora" type="time" />
+            <v-text-field v-model="retransmissio.hora" label="Hora" type="time" :readonly="!authStore.potEscriureTot" />
           </v-col>
         </v-row>
       </div>
@@ -81,6 +82,7 @@
             <div class="vincle-row">
               <v-autocomplete
                 v-model="retransmissio.contribucioId"
+                :readonly="!authStore.potEscriureTot"
                 :items="contribucionsItems"
                 item-title="nom"
                 item-value="id"
@@ -108,6 +110,7 @@
             <div class="vincle-row">
               <v-autocomplete
                 v-model="retransmissio.localitzacioId"
+                :readonly="!authStore.potEscriureTot"
                 :items="localitzacionsItems"
                 item-title="nom"
                 item-value="id"
@@ -134,6 +137,7 @@
           <v-col cols="12">
             <v-autocomplete
               v-model="retransmissio.ftthIds"
+              :readonly="!authStore.potEscriureTot"
               :items="ftthItems"
               item-title="nom"
               item-value="id"
@@ -172,6 +176,7 @@
         <div class="bloc-card-title">Notes</div>
         <v-textarea
           v-model="retransmissio.notes"
+          :readonly="!authStore.potEscriureTot"
           label="Observacions"
           rows="5"
           auto-grow

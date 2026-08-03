@@ -39,6 +39,7 @@
               v-model="localitzacio.nom"
               label="Nom de la localització *"
               placeholder="Ciutat Esportiva València, Ajuntament..."
+              :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
           <v-col cols="12" md="6">
@@ -48,6 +49,7 @@
               item-title="label"
               item-value="value"
               label="Tipus"
+              :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
           <v-col cols="12">
@@ -55,6 +57,7 @@
               v-model="localitzacio.adreca"
               label="Adreça"
               placeholder="Carrer, número, codi postal..."
+              :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
         </v-row>
@@ -69,10 +72,11 @@
               v-model="localitzacio.ip"
               label="IP"
               placeholder="Detectar automàticament"
+              :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
           <v-col cols="12" sm="4" md="2" class="d-flex align-center">
-            <v-btn color="secondary" size="small" @click="detectarIP" :loading="detectantIP" block>
+            <v-btn v-if="authStore.potEscriureFtth" color="secondary" size="small" @click="detectarIP" :loading="detectantIP" block>
               Detectar IP
             </v-btn>
           </v-col>
@@ -81,15 +85,17 @@
               v-model="localitzacio.telefonFixe"
               label="Telèfon fixe associat"
               placeholder="96 123 45 67"
+              :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
           <v-col cols="12" md="6">
             <div class="instalador-row">
-              <v-btn size="small" variant="outlined" @click="obrirDialogInstalador" class="flex-shrink-0" title="Seleccionar instal·lador">
+              <v-btn v-if="authStore.potEscriureFtth" size="small" variant="outlined" @click="obrirDialogInstalador" class="flex-shrink-0" title="Seleccionar instal·lador">
                 <v-icon size="16">mdi-account-hard-hat-outline</v-icon>
               </v-btn>
               <span v-if="nomInstalador" class="instalador-nom">{{ nomInstalador }}</span>
-              <span v-else class="instalador-placeholder" @click="obrirDialogInstalador">Selecciona instal·lador</span>
+              <span v-else-if="authStore.potEscriureFtth" class="instalador-placeholder" @click="obrirDialogInstalador">Selecciona instal·lador</span>
+              <span v-else class="instalador-placeholder">Sense instal·lador</span>
               <a
                 v-if="telefonInstalador"
                 :href="`tel:${telefonInstalador}`"
@@ -99,7 +105,7 @@
                 <v-icon size="14" class="mr-1">mdi-phone-outline</v-icon>{{ telefonInstalador }}
               </a>
               <v-btn
-                v-if="localitzacio.instaladorId || localitzacio.telefonManual"
+                v-if="(localitzacio.instaladorId || localitzacio.telefonManual) && authStore.potEscriureFtth"
                 icon
                 size="x-small"
                 variant="text"
@@ -131,6 +137,7 @@
           label="Observacions"
           rows="3"
           auto-grow
+          :readonly="!authStore.potEscriureFtth"
         />
       </div>
 
@@ -138,12 +145,14 @@
       <div class="bloc-card">
         <div class="bloc-card-title">Fotos</div>
         <FotoUploader
+          v-if="authStore.potEscriureFtth"
           :fotos="localitzacio.fotos || []"
           :max-fotos="6"
           @afegir="afegirFoto"
           @eliminar="eliminarFoto"
           @actualitzar-nota="actualitzarNotaFoto"
         />
+        <FotoViewer v-else :fotos="localitzacio.fotos || []" />
       </div>
     </div>
 
@@ -186,6 +195,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useFtthStore } from '@/stores/ftth'
 import SpeedTest from '@/components/ftth/SpeedTest.vue'
 import FotoUploader from '@/components/ftth/FotoUploader.vue'
+import FotoViewer from '@/components/ftth/FotoViewer.vue'
 import DialogInstalador from '@/components/ftth/DialogInstalador.vue'
 import DirtyGuardDialog from '@/components/shared/DirtyGuardDialog.vue'
 import { useDirtyGuard } from '@/composables/useDirtyGuard'

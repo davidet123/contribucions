@@ -98,6 +98,7 @@
             placeholder="UM 11, ENG 25, PROD..."
             autofocus
             density="compact"
+            :readonly="!authStore.potEscriureTot"
           />
           <v-select
             v-model="formDesti.tipus"
@@ -106,12 +107,13 @@
             item-value="value"
             label="Tipus"
             density="compact"
+            :readonly="!authStore.potEscriureTot"
           />
         </v-card-text>
         <v-card-actions class="pa-4 pt-0">
           <v-spacer />
           <v-btn variant="text" @click="tancarDesti">Cancel·lar</v-btn>
-          <v-btn color="primary" :disabled="!formDesti.nom" @click="desarDesti">
+          <v-btn v-if="authStore.potEscriureTot" color="primary" :disabled="!formDesti.nom" @click="desarDesti">
             {{ editantDestiId ? 'Desar canvis' : 'Crear' }}
           </v-btn>
         </v-card-actions>
@@ -133,6 +135,7 @@
                 placeholder="CODEC 9.1, INTERCOM EST4..."
                 autofocus
                 density="compact"
+                :readonly="!authStore.potEscriureTot"
               />
             </v-col>
             <v-col cols="6">
@@ -143,6 +146,7 @@
                 item-value="value"
                 label="Tipus"
                 density="compact"
+                :readonly="!authStore.potEscriureTot"
               />
             </v-col>
             <v-col cols="6">
@@ -156,6 +160,7 @@
                 density="compact"
                 hint="Selecciona o escriu una ubicació nova"
                 persistent-hint
+                :readonly="!authStore.potEscriureTot"
               />
             </v-col>
             <v-col cols="12">
@@ -164,6 +169,7 @@
                 label="Extensió / telèfon SIP"
                 placeholder="963 189 426"
                 density="compact"
+                :readonly="!authStore.potEscriureTot"
               />
             </v-col>
           </v-row>
@@ -171,7 +177,7 @@
         <v-card-actions class="pa-4 pt-0">
           <v-spacer />
           <v-btn variant="text" @click="tancarRecurs">Cancel·lar</v-btn>
-          <v-btn color="primary" :disabled="!formRecurs.nom" @click="desarRecurs">
+          <v-btn v-if="authStore.potEscriureTot" color="primary" :disabled="!formRecurs.nom" @click="desarRecurs">
             {{ editantRecursId ? 'Desar canvis' : 'Crear' }}
           </v-btn>
         </v-card-actions>

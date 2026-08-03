@@ -15,13 +15,13 @@
           <span class="tag-tx" v-if="instancia.tecnologia">{{ instancia.tecnologia.toUpperCase().replace('_', ' ') }}</span>
         </div>
         <div class="equip-header-right">
-          <v-btn icon size="x-small" variant="text" @click="moureAmunt(idx)" :disabled="idx === 0">
+          <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" @click="moureAmunt(idx)" :disabled="idx === 0">
             <v-icon size="14">mdi-arrow-up</v-icon>
           </v-btn>
-          <v-btn icon size="x-small" variant="text" @click="mourAvall(idx)" :disabled="idx === equipsLocal.length - 1">
+          <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" @click="mourAvall(idx)" :disabled="idx === equipsLocal.length - 1">
             <v-icon size="14">mdi-arrow-down</v-icon>
           </v-btn>
-          <v-btn icon size="x-small" variant="text" color="error" @click="eliminarEquip(idx)">
+          <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarEquip(idx)">
             <v-icon size="14">mdi-delete-outline</v-icon>
           </v-btn>
         </div>
@@ -38,9 +38,10 @@
             label="Equip del catàleg"
             density="compact"
             clearable
+            :readonly="!authStore.potEscriureTot"
             @update:model-value="onEquipChange(instancia, $event)"
           >
-            <template #append-item>
+            <template v-if="authStore.potEscriureTot" #append-item>
               <v-divider />
               <v-list-item @click="obrirDialogNouEquip(instancia)" class="mt-1">
                 <template #prepend><v-icon size="16" color="primary">mdi-plus</v-icon></template>
@@ -57,6 +58,7 @@
             label="Nom personalitzat"
             density="compact"
             placeholder="Opcional"
+            :readonly="!authStore.potEscriureTot"
             @change="emitUpdate"
           />
         </v-col>
@@ -70,6 +72,7 @@
             item-value="value"
             label="Tecnologia"
             density="compact"
+            :readonly="!authStore.potEscriureTot"
             @update:model-value="emitUpdate"
           />
         </v-col>
@@ -82,6 +85,7 @@
             density="compact"
             placeholder="88.2.152.19"
             font-family="monospace"
+            :readonly="!authStore.potEscriureTot"
             @change="emitUpdate"
           />
         </v-col>
@@ -89,29 +93,29 @@
         <!-- Paràmetres satèl·lit -->
         <template v-if="instancia.tecnologia === 'satellit'">
           <v-col cols="6" md="3">
-            <v-text-field v-model="instancia.satellit" label="Satèl·lit" density="compact" @change="emitUpdate" />
+            <v-text-field v-model="instancia.satellit" label="Satèl·lit" density="compact" :readonly="!authStore.potEscriureTot" @change="emitUpdate" />
           </v-col>
           <v-col cols="6" md="3">
-            <v-text-field v-model="instancia.freqDL" label="DL Freq." density="compact" @change="emitUpdate" />
+            <v-text-field v-model="instancia.freqDL" label="DL Freq." density="compact" :readonly="!authStore.potEscriureTot" @change="emitUpdate" />
           </v-col>
           <v-col cols="6" md="2">
-            <v-text-field v-model="instancia.bw" label="BW (MHz)" density="compact" @change="emitUpdate" />
+            <v-text-field v-model="instancia.bw" label="BW (MHz)" density="compact" :readonly="!authStore.potEscriureTot" @change="emitUpdate" />
           </v-col>
           <v-col cols="6" md="2">
-            <v-text-field v-model="instancia.sr" label="SR" density="compact" @change="emitUpdate" />
+            <v-text-field v-model="instancia.sr" label="SR" density="compact" :readonly="!authStore.potEscriureTot" @change="emitUpdate" />
           </v-col>
         </template>
 
         <!-- Proveïdor extern -->
         <template v-if="esProveidor(instancia)">
           <v-col cols="12" md="4">
-            <v-text-field v-model="instancia.nomProveidor" label="Nom proveïdor" density="compact" @change="emitUpdate" />
+            <v-text-field v-model="instancia.nomProveidor" label="Nom proveïdor" density="compact" :readonly="!authStore.potEscriureTot" @change="emitUpdate" />
           </v-col>
           <v-col cols="12" md="3">
-            <v-text-field v-model="instancia.contacteProveidor" label="Contacte" density="compact" @change="emitUpdate" />
+            <v-text-field v-model="instancia.contacteProveidor" label="Contacte" density="compact" :readonly="!authStore.potEscriureTot" @change="emitUpdate" />
           </v-col>
           <v-col cols="12" md="3">
-            <v-text-field v-model="instancia.telfProveidor" label="Telèfon" density="compact" @change="emitUpdate" />
+            <v-text-field v-model="instancia.telfProveidor" label="Telèfon" density="compact" :readonly="!authStore.potEscriureTot" @change="emitUpdate" />
           </v-col>
         </template>
       </v-row>
@@ -120,7 +124,7 @@
       <div class="vies-section">
         <div class="vies-header">
           <span class="vies-title">Vies</span>
-          <v-btn size="x-small" variant="text" color="primary" prepend-icon="mdi-plus" @click="afegirVia(instancia)">
+          <v-btn v-if="authStore.potEscriureTot" size="x-small" variant="text" color="primary" prepend-icon="mdi-plus" @click="afegirVia(instancia)">
             Afegir via
           </v-btn>
         </div>
@@ -136,6 +140,7 @@
               density="compact"
               hide-details
               style="max-width: 90px"
+              :readonly="!authStore.potEscriureTot"
               @update:model-value="emitUpdate"
             />
             <v-text-field
@@ -143,6 +148,7 @@
               placeholder="PGM, CLEAN FEED..."
               density="compact"
               hide-details
+              :readonly="!authStore.potEscriureTot"
               @change="emitUpdate"
             />
             <!-- Selector tipus destí -->
@@ -152,6 +158,7 @@
               mandatory
               rounded="lg"
               style="height:32px"
+              :disabled="!authStore.potEscriureTot"
               @update:model-value="onTipusDestiChange(via)"
             >
               <v-btn value="cct" size="x-small">CCT</v-btn>
@@ -169,9 +176,10 @@
                 hide-details
                 placeholder="Destí CCT"
                 clearable
+                :readonly="!authStore.potEscriureTot"
                 @update:model-value="onDestiChange(via, $event)"
               >
-                <template #append-item>
+                <template v-if="authStore.potEscriureTot" #append-item>
                   <v-divider />
                   <v-list-item @click="obrirDialogNouDesti(via)" class="mt-1">
                     <template #prepend><v-icon size="16" color="primary">mdi-plus</v-icon></template>
@@ -185,6 +193,7 @@
                 placeholder="O escriu nom..."
                 density="compact"
                 hide-details
+                :readonly="!authStore.potEscriureTot"
                 @change="emitUpdate"
               />
             </template>
@@ -196,6 +205,7 @@
                 placeholder="MITJANS IN SITU, MOTXILLES 1 a 9..."
                 density="compact"
                 hide-details
+                :readonly="!authStore.potEscriureTot"
                 @change="emitUpdate"
               />
             </template>
@@ -205,9 +215,10 @@
               placeholder="srt://..."
               density="compact"
               hide-details
+              :readonly="!authStore.potEscriureTot"
               @change="emitUpdate"
             />
-            <v-btn icon size="x-small" variant="text" color="error" @click="eliminarVia(instancia, vi)">
+            <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarVia(instancia, vi)">
               <v-icon size="12">mdi-close</v-icon>
             </v-btn>
             </div>
@@ -220,6 +231,7 @@
                 variant="plain"
                 class="via-notes-field"
                 prepend-inner-icon="mdi-note-text-outline"
+                :readonly="!authStore.potEscriureTot"
                 @change="emitUpdate"
               />
             </div>
@@ -233,12 +245,14 @@
         label="Notes de l'equip"
         density="compact"
         class="mt-2"
+        :readonly="!authStore.potEscriureTot"
         @change="emitUpdate"
       />
     </div>
 
     <!-- Botó afegir equip -->
     <v-btn
+      v-if="authStore.potEscriureTot"
       variant="outlined"
       color="primary"
       prepend-icon="mdi-plus"
@@ -291,6 +305,7 @@
 import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useCatalegStore } from '@/stores/cataleg'
+import { useAuthStore } from '@/stores/auth'
 import { TECNOLOGIES_TRANSPORT } from '@/utils/constants'
 import DialogNouEquip from '@/components/cataleg/DialogNouEquip.vue'
 import DialogNouDestiCCT from '@/components/cataleg/DialogNouDestiCCT.vue'
@@ -299,6 +314,7 @@ const props = defineProps({ contribucio: Object })
 const emit = defineEmits(['update'])
 
 const cataleg = useCatalegStore()
+const authStore = useAuthStore()
 
 const equipsLocal = ref(props.contribucio.equips ? JSON.parse(JSON.stringify(props.contribucio.equips)) : [])
 
