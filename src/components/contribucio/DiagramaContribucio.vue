@@ -1,10 +1,11 @@
+<!-- src/components/contribucio/DiagramaContribucio.vue -->
 <template>
   <div class="diagrama-wrapper" :class="mode">
 
     <!-- ══════════════════════════════════════
          BLOC CONTRIBUCIÓ
     ══════════════════════════════════════ -->
-    <div class="diagrama-seccio">
+    <div v-if="seccio === 'totes' || seccio === 'contribucio'" class="diagrama-seccio">
       <div class="seccio-titol">CONTRIBUCIÓ</div>
       <div class="diagrama-cos">
 
@@ -17,10 +18,10 @@
         </div>
 
         <!-- Col imatge lloc -->
-        <div class="col-lloc">
+        <!-- <div class="col-lloc">
           <img v-if="imatgeLloc" :src="imatgeLloc" class="lloc-img" />
           <div v-else class="lloc-placeholder">▣</div>
-        </div>
+        </div> -->
 
         <!-- Col equips -->
         <div class="col-equips">
@@ -37,7 +38,10 @@
     <!-- ══════════════════════════════════════
          BLOC COMUNICACIONS
     ══════════════════════════════════════ -->
-    <div v-if="equipsComunicacions.length" class="diagrama-seccio mt-diagrama">
+    <div
+      v-if="(seccio === 'totes' || seccio === 'comunicacions') && equipsComunicacions.length"
+      class="diagrama-seccio mt-diagrama"
+    >
       <div class="seccio-titol">COMUNICACIONS</div>
       <div class="diagrama-cos">
 
@@ -81,7 +85,9 @@ import EquipFilaDiagrama from './EquipFilaDiagrama.vue'
 
 const props = defineProps({
   contribucio: { type: Object, required: true },
-  mode: { type: String, default: 'preview' }
+  mode: { type: String, default: 'preview' },
+  // 'totes' (per defecte, editor) | 'contribucio' | 'comunicacions' (paginació PDF)
+  seccio: { type: String, default: 'totes' },
 })
 
 const cataleg = useCatalegStore()
@@ -362,7 +368,6 @@ const equipsComunicacions = computed(() => comunicacionsPerUbicacio.value.equipG
   color: rgba(26,26,46,0.35);
   white-space: nowrap;
   writing-mode: vertical-rl;
-  transform: rotate(180deg);
 }
 
 /* Col imatge */

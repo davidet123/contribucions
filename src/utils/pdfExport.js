@@ -1,15 +1,18 @@
-import { createApp, defineComponent, h } from 'vue'
+// src/utils/pdfExport.js
+import { createApp, h } from 'vue'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createPinia } from 'pinia'
+
+const SCALE = 2
 
 export async function generarPDF(contribucio) {
   try {
     const html2canvas = (await import('html2canvas')).default
     const jsPDF = (await import('jspdf')).default
 
-    // Crear un contenedor temporal
+    // Crear un contenidor temporal
     const contenidor = document.createElement('div')
     contenidor.style.cssText = `
       position: fixed; left: -9999px; top: 0;
@@ -17,9 +20,8 @@ export async function generarPDF(contribucio) {
     `
     document.body.appendChild(contenidor)
 
-    // Renderitzar el component PaginaPDF
+    // Renderitzar el component PaginaPDF (pot generar 1 o 2 .pdf-pagina)
     const { default: PaginaPDF } = await import('@/components/contribucio/PaginaPDF.vue')
-    const { default: DiagramaContribucio } = await import('@/components/contribucio/DiagramaContribucio.vue')
 
     const vuetify = createVuetify({ components, directives })
     const pinia = createPinia()
@@ -33,19 +35,16 @@ export async function generarPDF(contribucio) {
     app.use(pinia)
     app.mount(contenidor)
 
-    // Esperar que les imatges es carreguen
-    await new Promise(resolve => setTimeout(resolve, 600))
+    // Carregar el catàleg d'equips en aquesta instància aïllada de Pinia
+    const { useCatalegStore } = await import('@/stores/cataleg')
+    await useCatalegStore().carregarTot()
 
-    const canvas = await html2canvas(contenidor, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      width: contenidor.scrollWidth,
-      height: contenidor.scrollHeight,
-    })
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.95)
+    // Esperar que les fonts s'hagin carregat del tot
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready
+    }
+    // Marge addicional per a que es carreguin imatges remotes
+    await new Promise(resolve => setTimeout(resolve, 400))
 
     // A4 landscape
     const pdf = new jsPDF({
@@ -53,33 +52,23 @@ export async function generarPDF(contribucio) {
       unit: 'mm',
       format: 'a4',
     })
-
     const pdfW = pdf.internal.pageSize.getWidth()
     const pdfH = pdf.internal.pageSize.getHeight()
-    const imgW = canvas.width
-    const imgH = canvas.height
-    const ratio = pdfW / imgW
-    const scaledH = imgH * ratio
 
-    if (scaledH <= pdfH) {
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, scaledH)
-    } else {
-      // Paginar si el contingut és massa alt
-      let yOffset = 0
-      let pageNum = 0
-      while (yOffset < imgH) {
-        if (pageNum > 0) pdf.addPage()
-        const sliceH = Math.min(pdfH / ratio, imgH - yOffset)
-        const sliceCanvas = document.createElement('canvas')
-        sliceCanvas.width = imgW
-        sliceCanvas.height = sliceH
-        const ctx = sliceCanvas.getContext('2d')
-        ctx.drawImage(canvas, 0, yOffset, imgW, sliceH, 0, 0, imgW, sliceH)
-        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95)
-        pdf.addImage(sliceData, 'JPEG', 0, 0, pdfW, sliceH * ratio)
-        yOffset += sliceH
-        pageNum++
-      }
+    // Captura pàgina a pàgina: cada .pdf-pagina és una unitat completa,
+    // no cal cap lògica de tall — evita el problema de caixes partides
+    // que teníem amb l'antic mètode de canvas únic + slicing.
+    const paginesEl = contenidor.querySelectorAll('.pdf-pagina')
+    for (let i = 0; i < paginesEl.length; i++) {
+      if (i > 0) pdf.addPage()
+      const canvas = await html2canvas(paginesEl[i], {
+        scale: SCALE,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+      })
+      const imgData = canvas.toDataURL('image/jpeg', 0.95)
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
     }
 
     // Nom del fitxer

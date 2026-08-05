@@ -1,3 +1,4 @@
+<!-- src/components/contribucio/SeccioContactes.vue -->
 <template>
   <div class="bloc-card">
     <div class="bloc-card-title">Contactes i notes</div>
@@ -27,7 +28,15 @@
         :readonly="!authStore.potEscriureTot"
         @change="emitUpdate"
       />
-      <v-checkbox v-model="nota.important" density="compact" hide-details color="error" title="Important (requadre)" :readonly="!authStore.potEscriureTot" />
+      <v-checkbox
+        v-model="nota.important"
+        density="compact"
+        hide-details
+        color="error"
+        title="Important (requadre)"
+        :readonly="!authStore.potEscriureTot"
+        @update:model-value="emitUpdate"
+      />
       <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarNota(ni)">
         <v-icon size="14">mdi-delete-outline</v-icon>
       </v-btn>
