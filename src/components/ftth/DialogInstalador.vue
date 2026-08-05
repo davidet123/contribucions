@@ -115,13 +115,19 @@
       <v-card>
         <v-card-title class="text-h6 pa-5 pb-2">Eliminar instal·lador</v-card-title>
         <v-card-text>
-          Vols eliminar <strong>{{ aEliminar?.nom }}</strong>?
-          No s'eliminarà de les localitzacions on ja estava assignat.
+          <v-alert v-if="teFtthAssociades" type="warning" density="compact" variant="tonal">
+            No es pot eliminar <strong>{{ aEliminar?.nom }}</strong>: té localitzacions FTTH associades.
+            Desassigna'l primer d'aquestes localitzacions per poder eliminar-lo.
+          </v-alert>
+          <template v-else>
+            Vols eliminar <strong>{{ aEliminar?.nom }}</strong>?
+            No s'eliminarà de les localitzacions on ja estava assignat.
+          </template>
         </v-card-text>
         <v-card-actions class="pa-4 pt-0">
           <v-spacer />
-          <v-btn variant="text" @click="dialogEliminar = false">Cancel·lar</v-btn>
-          <v-btn color="error" @click="ferEliminar">Eliminar</v-btn>
+          <v-btn variant="text" @click="dialogEliminar = false">{{ teFtthAssociades ? 'Tancar' : 'Cancel·lar' }}</v-btn>
+          <v-btn v-if="!teFtthAssociades" color="error" @click="ferEliminar">Eliminar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -205,13 +211,20 @@ function guardarForm() {
   cancelarForm()
 }
 
+// Comprova si l'instal·lador té localitzacions FTTH associades abans de
+// permetre eliminar-lo (evita deixar instaladorId òrfens a les FTTH).
+const teFtthAssociades = computed(() => {
+  if (!aEliminar.value) return false
+  return store.instaladorTeFtthAssociades(aEliminar.value.id)
+})
+
 function confirmarEliminar(inst) {
   aEliminar.value = inst
   dialogEliminar.value = true
 }
 
 function ferEliminar() {
-  if (aEliminar.value) {
+  if (aEliminar.value && !teFtthAssociades.value) {
     if (seleccionat.value?.id === aEliminar.value.id) seleccionat.value = null
     store.eliminarInstalador(aEliminar.value.id)
     dialogEliminar.value = false

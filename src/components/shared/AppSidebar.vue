@@ -78,22 +78,27 @@
         Nova localització
       </router-link>
 
-      <div class="sidebar-divider" />
-
-      <!-- Catàleg -->
-      <div class="sidebar-section-label">Catàleg</div>
-      <router-link to="/cataleg/equips" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/equips') }" @click="tancarDrawer">
-        <v-icon size="18">mdi-server</v-icon>
-        Equips
-      </router-link>
-      <router-link to="/cataleg/tipus-equip" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/tipus-equip') }" @click="tancarDrawer">
-        <v-icon size="18">mdi-tag-multiple-outline</v-icon>
-        Tipus d'equip
-      </router-link>
-      <router-link to="/cataleg/cct" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/cct') }" @click="tancarDrawer">
-        <v-icon size="18">mdi-television-play</v-icon>
-        Recursos CCT
-      </router-link>
+      <!-- Catàleg: només visible amb sessió iniciada (qualsevol rol) -->
+      <template v-if="authStore.isAuthenticated">
+        <div class="sidebar-divider" />
+        <div class="sidebar-section-label">Catàleg</div>
+        <router-link to="/cataleg/equips" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/equips') }" @click="tancarDrawer">
+          <v-icon size="18">mdi-server</v-icon>
+          Equips
+        </router-link>
+        <router-link to="/cataleg/tipus-equip" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/tipus-equip') }" @click="tancarDrawer">
+          <v-icon size="18">mdi-tag-multiple-outline</v-icon>
+          Tipus d'equip
+        </router-link>
+        <router-link to="/cataleg/cct" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/cct') }" @click="tancarDrawer">
+          <v-icon size="18">mdi-television-play</v-icon>
+          Recursos CCT
+        </router-link>
+        <router-link to="/cataleg/instaladors" class="nav-item" :class="{ active: $route.path.startsWith('/cataleg/instaladors') }" @click="tancarDrawer">
+          <v-icon size="18">mdi-account-hard-hat-outline</v-icon>
+          Instal·ladors
+        </router-link>
+      </template>
 
       <!-- Admin -->
       <template v-if="authStore.esAdmin">
@@ -109,7 +114,7 @@
     <!-- Footer: sempre fixat a baix, fora de la zona amb scroll -->
     <div class="sidebar-footer">
       <UserSessionWidget />
-      <div class="sidebar-footer-text">À Mèdia · v1.0.5</div>
+      <div class="sidebar-footer-text">À Mèdia · v1.0.6</div>
     </div>
   </nav>
 </template>

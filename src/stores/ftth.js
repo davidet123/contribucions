@@ -177,6 +177,12 @@ export const useFtthStore = defineStore('ftth', () => {
     return instaladors.value.find(i => i.id === id) || null
   }
 
+  // Comprova si un instal·lador té alguna localització FTTH assignada.
+  // S'usa per bloquejar l'eliminació i no deixar instaladorId òrfens.
+  function instaladorTeFtthAssociades(instaladorId) {
+    return localitzacions.value.some(l => l.instaladorId === instaladorId)
+  }
+
   async function crearInstalador(base = {}) {
     const nou = nouInstalador(base)
     await setDoc(doc(db, COL_INS, nou.id), toFirestore(nou))
@@ -212,5 +218,6 @@ export const useFtthStore = defineStore('ftth', () => {
     afegirFoto, actualitzarNotaFoto, eliminarFoto,
     afegirSpeedResult,
     crearInstalador, actualitzarInstalador, eliminarInstalador, getInstaladorById,
+    instaladorTeFtthAssociades,
   }
 })

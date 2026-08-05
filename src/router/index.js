@@ -50,23 +50,31 @@ const routes = [
   },
 
   // ========== CATÀLEG ==========
+  // Tot el catàleg requereix sessió iniciada (qualsevol rol); els convidats
+  // no poden veure'n res, ni per menú ni per URL directa.
   {
     path: '/cataleg/equips',
     name: 'CatalegEquips',
     component: () => import('@/views/CatalegEquips.vue'),
-    meta: { title: "Catàleg d'equips" }
+    meta: { title: "Catàleg d'equips", requiresAuth: true }
   },
   {
     path: '/cataleg/tipus-equip',
     name: 'CatalegTipusEquip',
     component: () => import('@/views/CatalegTipusEquip.vue'),
-    meta: { title: "Tipus d'equip" }
+    meta: { title: "Tipus d'equip", requiresAuth: true }
   },
   {
     path: '/cataleg/cct',
     name: 'CatalegCCT',
     component: () => import('@/views/CatalegCCT.vue'),
-    meta: { title: 'Recursos CCT' }
+    meta: { title: 'Recursos CCT', requiresAuth: true }
+  },
+  {
+    path: '/cataleg/instaladors',
+    name: 'CatalegInstaladors',
+    component: () => import('@/views/CatalegInstaladors.vue'),
+    meta: { title: 'Instal·ladors', requiresAuth: true }
   },
 
   // ========== FTTH ==========
@@ -128,7 +136,7 @@ const router = createRouter({
 // de lectura pública i no passen per cap comprovació, ja que qualsevol
 // persona -autenticada o no- pot consultar-les.
 router.beforeEach(async (to) => {
-  if (!to.meta.requiresAdmin && !to.meta.requiresWrite) return true
+  if (!to.meta.requiresAdmin && !to.meta.requiresWrite && !to.meta.requiresAuth) return true
 
   const authStore = useAuthStore()
 
@@ -143,6 +151,10 @@ router.beforeEach(async (to) => {
         }
       }, 50)
     })
+  }
+
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    return { path: '/' }
   }
 
   if (to.meta.requiresAdmin && !authStore.esAdmin) {
