@@ -39,38 +39,13 @@
          BLOC COMUNICACIONS
     ══════════════════════════════════════ -->
     <div
-      v-if="(seccio === 'totes' || seccio === 'comunicacions') && equipsComunicacions.length"
+      v-if="(seccio === 'totes' || seccio === 'comunicacions') && (contribucio.comunicacions?.length)"
       class="diagrama-seccio mt-diagrama"
     >
       <div class="seccio-titol">COMUNICACIONS</div>
-      <div class="diagrama-cos">
+      <div class="diagrama-cos-com">
 
-        <!-- Franges dinàmiques per ubicació -->
-        <div class="franja-cct franja-dinamica">
-          <template v-for="(franja, fi) in comunicacionsPerUbicacio.franges" :key="franja.ubicacio">
-            <div class="franja-segment">
-              <div class="franja-segment-bg" />
-              <div class="franja-segment-label">
-                <span class="cct-label-text">{{ franja.label }}</span>
-              </div>
-            </div>
-            <div v-if="fi < comunicacionsPerUbicacio.franges.length - 1" class="franja-separator" />
-          </template>
-        </div>
-
-        <div class="col-lloc">
-          <img v-if="imatgeLloc" :src="imatgeLloc" class="lloc-img com-lloc-img" />
-          <img v-else src="@/assets/images/a-punt.png" class="pdf-logo-corporatiu" alt="À Punt Mèdia" />
-        </div>
-
-        <div class="col-equips">
-          <EquipFilaDiagrama
-            v-for="equip in equipsComunicacions"
-            :key="equip.id"
-            :equip="equip"
-            :franges="comunicacionsPerUbicacio.franges"
-          />
-        </div>
+        <GridComunicacions :comunicacions="contribucio.comunicacions || []" />
 
       </div>
     </div>
@@ -82,6 +57,7 @@
 import { computed } from 'vue'
 import { useCatalegStore } from '@/stores/cataleg'
 import EquipFilaDiagrama from './EquipFilaDiagrama.vue'
+import GridComunicacions from './GridComunicacions.vue'
 
 const props = defineProps({
   contribucio: { type: Object, required: true },
@@ -185,94 +161,6 @@ const equipsContribucio = computed(() => {
 
   return grups
 })
-
-// ── Comunicacions ─────────────────────────────
-
-// Retorna { ubicacio, label, grups[] } per pintar franges dinàmiques
-const comunicacionsPerUbicacio = computed(() => {
-  const grups = props.contribucio.comunicacions || []
-  if (!grups.length) return { equipGrups: [], franges: [] }
-
-  // Recollir totes les ubicacions presents
-  const ubicacionsSet = new Set()
-  for (const grup of grups) {
-    for (const linia of (grup.linies || [])) {
-      if (linia.ubicacioDesti) ubicacionsSet.add(linia.ubicacioDesti)
-    }
-  }
-
-  // Mapeig ubicació → label
-  const ubicacioLabel = (ub) => {
-    const map = { cct: 'CCT', est2: 'EST. 2', est3: 'EST. 3', motxilles: 'MOTXILLES', conti: 'CONTI', um_camp: 'UM CAMP' }
-    return map[ub] || ub?.toUpperCase() || 'CCT'
-  }
-
-  const franges = Array.from(ubicacionsSet).map(ub => ({ ubicacio: ub, label: ubicacioLabel(ub) }))
-
-  // Construir grups per al diagrama
-  const equipGrups = grups.map(grup => {
-    const files = []
-    for (const linia of (grup.linies || [])) {
-      // Cada linia pot generar 1 o 2 files (tx i/o rx)
-      const hasTx = linia.etiquetaTx && linia.etiquetaTx.trim() !== ''
-      const hasRx = linia.etiquetaRx && linia.etiquetaRx.trim() !== ''
-
-      if (hasTx) {
-        files.push({
-          key: linia.id + '_tx',
-          via: linia.recursCamp || '',
-          etiquetaVia: null,
-          etiqueta: linia.etiquetaTx,
-          direccio: 'tx',
-          ubicacioDesti: linia.ubicacioDesti,
-          desti: linia.recursDestiNom || linia.ubicacioDesti || '—',
-          destiNotes: '',
-        })
-      }
-      if (hasRx) {
-        files.push({
-          key: linia.id + '_rx',
-          // Si ja hem posat el TX, la via no es repeteix
-          via: hasTx ? '' : (linia.recursCamp || ''),
-          etiquetaVia: null,
-          etiqueta: linia.etiquetaRx,
-          direccio: 'rx',
-          ubicacioDesti: linia.ubicacioDesti,
-          desti: linia.recursDestiNom || linia.ubicacioDesti || '—',
-          destiNotes: '',
-        })
-      }
-      // Si no hi ha cap etiqueta, mostrem una fila buida
-      if (!hasTx && !hasRx) {
-        files.push({
-          key: linia.id,
-          via: linia.recursCamp || '',
-          etiquetaVia: null,
-          etiqueta: '',
-          direccio: 'tx',
-          ubicacioDesti: linia.ubicacioDesti,
-          desti: linia.recursDestiNom || linia.ubicacioDesti || '—',
-          destiNotes: '',
-        })
-      }
-    }
-    if (files.length === 0) {
-      files.push({ key: 'empty', via: '', etiquetaVia: null, etiqueta: '', direccio: 'tx', ubicacioDesti: 'cct', desti: '', destiNotes: '' })
-    }
-    return {
-      id: grup.id,
-      nom: grup.nom || 'Origen',
-      logoId: grup.logoId || null,
-      connexio: '',
-      files,
-      franges, // les franges de destins d'aquest grup
-    }
-  })
-
-  return { equipGrups, franges }
-})
-
-const equipsComunicacions = computed(() => comunicacionsPerUbicacio.value.equipGrups)
 </script>
 
 <style scoped>
@@ -299,7 +187,7 @@ const equipsComunicacions = computed(() => comunicacionsPerUbicacio.value.equipG
   border-bottom: 1px solid #E5E7EB;
 }
 
-/* Contenidor amb posició relativa per a la franja absoluta */
+/* Contenidor amb posició relativa per a la franja absoluta (BLOC CONTRIBUCIÓ) */
 .diagrama-cos {
   position: relative;
   display: flex;
@@ -307,49 +195,26 @@ const equipsComunicacions = computed(() => comunicacionsPerUbicacio.value.equipG
   min-height: 60px;
 }
 
-/* Franja dinàmica: múltiples segments per ubicació */
-.franja-dinamica {
+/* Contenidor del BLOC COMUNICACIONS: sense franja absoluta, el grid ja porta els seus propis colors */
+.diagrama-cos-com {
   display: flex;
-  flex-direction: column;
-}
-
-.franja-segment {
-  flex: 1;
-  display: flex;
-  min-height: 40px;
-}
-
-.franja-segment-bg {
-  flex: 1;
-  background: #FADADD;
-}
-
-.franja-segment-label {
-  width: 20px;
-  background: #FADADD;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.franja-separator {
-  height: 1px;
-  background: rgba(232, 0, 28, 0.3);
+  align-items: stretch;
+  min-height: 60px;
 }
 
 /* Franja rosa absoluta: 80px destins + 20px label = 100px des de la dreta */
 .franja-cct {
   position: absolute;
-  top: 0; 
-  right: 0; 
+  top: 0;
+  right: 0;
   bottom: 0;
-  width: 200px; /* Aumentado de 100px a 116px */
+  width: 200px;
   display: flex;
   z-index: 0;
   border-left: 2px solid #E8001C;
 }
 .cct-destins-area {
-  width: 175px; /* Aumentado de 80px a 96px */
+  width: 175px;
   background: #FADADD;
 }
 .cct-label-area {
@@ -406,22 +271,13 @@ const equipsComunicacions = computed(() => comunicacionsPerUbicacio.value.equipG
   height: 50px;
   object-fit: contain;
 }
-.amedia-badge {
-  width: 28px; height: 28px;
-  background: #E8001C;
-  border-radius: 4px;
-  display: flex; align-items: center; justify-content: center;
-  color: white;
-  font-family: 'Space Mono', monospace;
-  font-size: 14px; font-weight: 700;
-}
 
-/* Col equips: padding-right = amplada franja CCT */
+/* Col equips: padding-right = amplada franja CCT (només BLOC CONTRIBUCIÓ) */
 .col-equips {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 8px 116px 8px 0; /* Aumentado de 100px a 116px */
+  padding: 8px 116px 8px 0;
   gap: 8px;
   z-index: 1;
 }

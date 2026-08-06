@@ -1,3 +1,4 @@
+<!-- src/components/contribucio/SeccioComunicacions.vue -->
 <template>
   <div class="bloc-card">
     <div class="bloc-card-title">Comunicacions</div>
@@ -61,42 +62,73 @@
               @change="emitUpdate"
             />
 
-            <!-- Ubicació destí -->
-            <v-select
-              v-model="linia.ubicacioDesti"
-              :items="ubicacionsOpcions"
-              item-title="label"
-              item-value="value"
-              label="Destí"
+            <!-- Tipus de destí -->
+            <v-btn-toggle
+              :model-value="linia.tipusDesti || 'ubicacio'"
               density="compact"
-              hide-details
-              style="max-width: 150px"
-              :readonly="!authStore.potEscriureTot"
-              @update:model-value="onUbicacioChange(linia)"
-            />
-
-            <!-- Recurs dins del destí -->
-            <v-autocomplete
-              v-model="linia.recursDestiId"
-              :items="recursosPerUbicacio(linia.ubicacioDesti)"
-              item-title="nomComplet"
-              item-value="id"
-              label="Recurs"
-              density="compact"
-              hide-details
-              clearable
-              style="min-width: 180px"
-              :readonly="!authStore.potEscriureTot"
-              @update:model-value="onRecursDestiChange(linia, $event)"
+              mandatory
+              color="primary"
+              :disabled="!authStore.potEscriureTot"
+              @update:model-value="val => onTipusDestiComChange(linia, val)"
             >
-              <template v-if="authStore.potEscriureTot" #append-item>
-                <v-divider />
-                <v-list-item @click="obrirNouRecurs(linia)" class="mt-1">
-                  <template #prepend><v-icon size="16" color="primary">mdi-plus</v-icon></template>
-                  <v-list-item-title class="text-primary text-caption">Nou recurs</v-list-item-title>
-                </v-list-item>
-              </template>
-            </v-autocomplete>
+              <v-btn value="ubicacio" size="small">Ubicació</v-btn>
+              <v-btn v-if="grupPotTenirFillsNiats(grup.id)" value="origen" size="small">Origen</v-btn>
+            </v-btn-toggle>
+
+            <!-- Destí: ubicació del catàleg -->
+            <template v-if="(linia.tipusDesti || 'ubicacio') === 'ubicacio'">
+              <v-select
+                v-model="linia.ubicacioDesti"
+                :items="ubicacionsOpcions"
+                item-title="label"
+                item-value="value"
+                label="Destí"
+                density="compact"
+                hide-details
+                style="max-width: 150px"
+                :readonly="!authStore.potEscriureTot"
+                @update:model-value="onUbicacioChange(linia)"
+              />
+
+              <!-- Recurs dins del destí -->
+              <v-autocomplete
+                v-model="linia.recursDestiId"
+                :items="recursosPerUbicacio(linia.ubicacioDesti)"
+                item-title="nomComplet"
+                item-value="id"
+                label="Recurs"
+                density="compact"
+                hide-details
+                clearable
+                style="min-width: 180px"
+                :readonly="!authStore.potEscriureTot"
+                @update:model-value="onRecursDestiChange(linia, $event)"
+              >
+                <template v-if="authStore.potEscriureTot" #append-item>
+                  <v-divider />
+                  <v-list-item @click="obrirNouRecurs(linia)" class="mt-1">
+                    <template #prepend><v-icon size="16" color="primary">mdi-plus</v-icon></template>
+                    <v-list-item-title class="text-primary text-caption">Nou recurs</v-list-item-title>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
+            </template>
+
+            <!-- Destí: un altre origen -->
+            <template v-else>
+              <v-select
+                v-model="linia.destiGrupId"
+                :items="altresOrigens(grup.id)"
+                item-title="nom"
+                item-value="id"
+                label="Altre origen"
+                density="compact"
+                hide-details
+                style="min-width: 200px"
+                :readonly="!authStore.potEscriureTot"
+                @update:model-value="emitUpdate"
+              />
+            </template>
 
             <!-- Eliminar línia -->
             <v-btn v-if="authStore.potEscriureTot" icon size="x-small" variant="text" color="error" @click="eliminarLinia(grup, li)">
@@ -143,7 +175,11 @@
               <span class="preview-arrow rx">←</span>
               <span class="preview-etiqueta">{{ linia.etiquetaRx }}</span>
             </template>
-            <span class="preview-desti">{{ linia.recursDestiNom || linia.ubicacioDesti || '—' }}</span>
+            <span class="preview-desti">
+              {{ (linia.tipusDesti || 'ubicacio') === 'origen'
+                ? (altresOrigens(grup.id).find(o => o.id === linia.destiGrupId)?.nom || '—')
+                : (linia.recursDestiNom || linia.ubicacioDesti || '—') }}
+            </span>
           </div>
         </div>
 
@@ -272,6 +308,50 @@ function onRecursCreat(recurs) {
   }
 }
 
+// Mapa: id de grup fill → id del grup pare que ja el té niat
+const propietariNiat = computed(() => {
+  const mapa = new Map()
+  for (const g of comunicacionsLocal.value) {
+    for (const l of (g.linies || [])) {
+      if ((l.tipusDesti || 'ubicacio') === 'origen' && l.destiGrupId) {
+        mapa.set(l.destiGrupId, g.id)
+      }
+    }
+  }
+  return mapa
+})
+
+// Altres orígens seleccionables: exclou el propi, i exclou els ja niats
+// SOTA UN ALTRE PARE — si ja el té niat aquest mateix pare, es pot seguir triant
+function altresOrigens(grupActualId) {
+  return comunicacionsLocal.value
+    .filter(g => g.id !== grupActualId)
+    .filter(g => {
+      const propietari = propietariNiat.value.get(g.id)
+      return !propietari || propietari === grupActualId
+    })
+    .map(g => ({ id: g.id, nom: g.nom || 'Origen sense nom' }))
+}
+
+// Un grup ja niat sota un altre pare no pot tenir fills propis (nivell únic)
+function grupPotTenirFillsNiats(grupId) {
+  const propietari = propietariNiat.value.get(grupId)
+  return !propietari || propietari === grupId
+}
+
+// Canvi de tipus de destí: neteja els camps del tipus contrari
+function onTipusDestiComChange(linia, valor) {
+  linia.tipusDesti = valor
+  if (valor === 'origen') {
+    linia.ubicacioDesti = 'cct'
+    linia.recursDestiId = null
+    linia.recursDestiNom = ''
+  } else {
+    linia.destiGrupId = null
+  }
+  emitUpdate()
+}
+
 // CRUD grups
 function afegirGrup() {
   comunicacionsLocal.value.push({
@@ -293,9 +373,11 @@ function afegirLinia(grup) {
   grup.linies.push({
     id: uuidv4(),
     recursCamp: '',
+    tipusDesti: 'ubicacio',
     ubicacioDesti: 'cct',
     recursDestiId: null,
     recursDestiNom: '',
+    destiGrupId: null,
     etiquetaTx: '',
     etiquetaRx: '',
   })

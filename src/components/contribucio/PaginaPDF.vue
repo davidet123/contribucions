@@ -159,7 +159,7 @@ defineExpose({ paginaRef })
   align-items: center;
   justify-content: center;
 }
-.pdf-logo { height: 70px; width: auto; max-width: 100px; object-fit: contain; }
+.pdf-logo { height: 90px; width: auto; max-width: 100px; object-fit: contain; }
 .pdf-logo-placeholder { width: 70px; height: 70px; }
 
 .pdf-header-centre { flex: 1; }

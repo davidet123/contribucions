@@ -113,9 +113,11 @@ function novaLiniaComunicacio() {
   return {
     id: uuidv4(),
     recursCamp: '',
+    tipusDesti: 'ubicacio',   // 'ubicacio' (catàleg) | 'origen' (un altre grup de comunicacions)
     ubicacioDesti: 'cct',
     recursDestiId: null,
     recursDestiNom: '',
+    destiGrupId: null,        // només s'usa si tipusDesti === 'origen'
     etiquetaTx: '',
     etiquetaRx: '',
   }
