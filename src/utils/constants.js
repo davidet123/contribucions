@@ -77,8 +77,19 @@ export const UBICACIONS_COM = [
   { value: 'um_camp', label: 'UM Camp' },
 ]
 
-// Platforms
+// Platforms (plataforma d'emissió global de la capçalera de la contribució)
 export const PLATAFORMES = ['TDT', 'WEB', 'TDT i WEB', 'YouTube', 'Altra']
+
+// Plataformes digitals de sortida per als blocs "digital" de Recursos interns CCT
+// (HERO → RRSS / Web event). Icona pròpia pujada per l'usuari, no mdi.
+export const TIPUS_PLATAFORMA_DIGITAL = [
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'tiktok', label: 'TikTok' },
+  { value: 'web', label: 'Web / Brightcove' },
+  { value: 'altra', label: 'Altra' },
+]
 
 // Default via template by equipment category
 export const VIES_PER_DEFECTE = {
@@ -122,4 +133,13 @@ export const VIES_PER_DEFECTE = {
   altre: [
     { numero: 1, direccio: 'tx', etiqueta: '-' },
   ],
+}
+// Icones de marca per defecte per a plataformes digitals conegudes.
+// S'utilitzen quan la plataforma no té iconUrl pujat manualment.
+// Font: @mdi/font (ja inclòs al projecte), sense dependència de xarxa.
+export const ICONES_PLATAFORMA_DEFECTE = {
+  youtube: { mdi: 'mdi-youtube', color: '#FF0000' },
+  instagram: { mdi: 'mdi-instagram', color: '#E1306C' },
+  facebook: { mdi: 'mdi-facebook', color: '#1877F2' },
+  tiktok: { mdi: 'mdi-tiktok', color: '#000000' },
 }

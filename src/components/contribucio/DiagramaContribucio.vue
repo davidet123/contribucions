@@ -133,7 +133,7 @@ const equipsContribucio = computed(() => {
     })
   }
 
-  // Recursos interns CCT (INGESTA, CONTINUÏTAT, E. POLIVALENT, ESTUDI 3...)
+  // Recursos interns CCT (INGESTA, CONTINUÏTAT, E. POLIVALENT, ESTUDI 3, HERO digital...)
   for (const bloc of (props.contribucio.routingCCT || [])) {
     const vies = bloc.vies || []
     const files = vies.map((via, i) => ({
@@ -156,6 +156,8 @@ const equipsContribucio = computed(() => {
       connexio: '',
       notes: '',
       files,
+      tipusBloc: bloc.tipusBloc || 'estandard',
+      plataformes: bloc.plataformes || [],
     })
   }
 
