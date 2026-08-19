@@ -41,7 +41,7 @@
     <!-- Capsa original de l'equip -->
     <div
       class="equip-grid-container"
-      :style="{ gridTemplateColumns: `${amplaTitol} 8px 1fr ${temExtern ? '90px' : '0px'} 80px` }"
+      :style="{ gridTemplateColumns: `${amplaTitol} 8px 1fr ${temExtern ? '90px' : '0px'} 170px` }"
     >
 
       <!-- Fons del recuadre de l'equip (posició absoluta dins col 1) -->

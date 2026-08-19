@@ -126,7 +126,7 @@ defineExpose({ paginaRef })
   width: 297mm;
   min-height: 210mm;
   background: white;
-  padding: 12mm 14mm;
+  padding: 20px 30px;
   font-family: 'DM Sans', sans-serif;
   font-size: 10pt;
   box-sizing: border-box;
@@ -135,7 +135,7 @@ defineExpose({ paginaRef })
 
 .pdf-header {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 16px;
   margin-bottom: 10px;
   padding-bottom: 10px;
@@ -154,15 +154,23 @@ defineExpose({ paginaRef })
 }
 
 .pdf-header-logo {
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  width: 200px;
+  flex-shrink: 0;
 }
-.pdf-logo { height: 90px; width: auto; max-width: 100px; object-fit: contain; }
-.pdf-logo-placeholder { width: 70px; height: 70px; }
+.pdf-logo {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+.pdf-logo-placeholder {
+  position: absolute;
+  inset: 0;
+}
 
-.pdf-header-centre { flex: 1; }
+.pdf-header-centre { flex: 1; text-align: center; }
 .pdf-titol-principal {
   font-family: 'Space Mono', monospace;
   font-size: 13pt;
@@ -234,8 +242,8 @@ defineExpose({ paginaRef })
 
 .pdf-peu {
   position: absolute;
-  bottom: 8mm;
-  left: 14mm;
+  bottom: 12px;
+  left: 30px;
   font-family: 'Space Mono', monospace;
   font-size: 8pt;
   color: #9CA3AF;

@@ -274,12 +274,12 @@ const equipsContribucio = computed(() => {
   object-fit: contain;
 }
 
-/* Col equips: padding-right = amplada franja CCT (només BLOC CONTRIBUCIÓ) */
+/* Col equips: padding-right = amplada de l'àrea "cct-label-area" (franja-cct 200px - columna destí 170px de l'equip = 30px de marge, suficient perquè l'etiqueta vertical de 20px no quede tapada) */
 .col-equips {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 8px 116px 8px 0;
+  padding: 8px 25px 8px 0;
   gap: 8px;
   z-index: 1;
 }

@@ -423,7 +423,6 @@ function emitUpdate() {
 }
 .routing-header { display: flex; align-items: center; gap: 4px; }
 .digital-switch :deep(.v-label) { font-size: 12px; }
-.vies-section { }
 .digital-section {
   border-top: 1px dashed #E5E7EB;
   padding-top: 8px;
