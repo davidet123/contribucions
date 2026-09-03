@@ -114,7 +114,7 @@
     <!-- Footer: sempre fixat a baix, fora de la zona amb scroll -->
     <div class="sidebar-footer">
       <UserSessionWidget />
-      <div class="sidebar-footer-text">À Mèdia · v1.0.8</div>
+      <div class="sidebar-footer-text">À Mèdia · v1.0.9</div>
     </div>
   </nav>
 </template>

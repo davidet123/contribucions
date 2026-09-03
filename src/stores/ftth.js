@@ -27,6 +27,10 @@ function novaLocalitzacio(base = {}) {
     metresAcometida: '',
     // Text lliure quan metresAcometida === 'altre'
     metresAcometidaAltre: '',
+    ont: '',
+    // Data d'alta/baixa: només aplica a localitzacions de tipus 'ocasional'
+    dataAlta: null,
+    dataBaixa: '',
     speedResults: [],
     instaladorId: null,
     telefonManual: '',
@@ -205,8 +209,11 @@ export const useFtthStore = defineStore('ftth', () => {
   }
 
   // ── Computed ──────────────────────────────────────────────────────────────
+  // Ordre: data d'alta (o data de creació si no en té), mai per updatedAt
   const localitzacionsOrdenades = computed(() =>
-    [...localitzacions.value].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    [...localitzacions.value].sort((a, b) =>
+      new Date(b.dataAlta || b.createdAt) - new Date(a.dataAlta || a.createdAt)
+    )
   )
 
   return {

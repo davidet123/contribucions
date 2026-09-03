@@ -44,7 +44,7 @@
       <div class="bloc-card">
         <div class="bloc-card-title">Dades generals</div>
         <v-row dense>
-          <v-col cols="12" md="6">
+          <v-col cols="12" md="4">
             <v-text-field
               v-model="localitzacio.nom"
               label="Nom de la localització *"
@@ -52,7 +52,7 @@
               :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
-          <v-col cols="12" md="6">
+          <v-col cols="12" md="4">
             <v-select
               v-model="localitzacio.tipus"
               :items="tipusOptions"
@@ -62,7 +62,7 @@
               :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
-          <v-col cols="12">
+          <v-col cols="12" md="4">
             <v-text-field
               v-model="localitzacio.adreca"
               label="Adreça"
@@ -70,7 +70,7 @@
               :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
-          <v-col cols="12" sm="6" md="4">
+          <v-col cols="12" sm="6" md="3">
             <v-select
               v-model="localitzacio.metresAcometida"
               :items="metresAcometidaOptions"
@@ -80,7 +80,7 @@
               :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
-          <v-col v-if="localitzacio.metresAcometida === 'altre'" cols="12" sm="6" md="4">
+          <v-col v-if="localitzacio.metresAcometida === 'altre'" cols="12" sm="6" md="3">
             <v-text-field
               v-model="localitzacio.metresAcometidaAltre"
               label="Especifica els metres"
@@ -88,14 +88,35 @@
               :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
+          <v-col v-if="localitzacio.tipus === 'ocasional'" cols="6" sm="4" md="3">
+            <v-text-field
+              v-model="localitzacio.dataAlta"
+              label="Data d'alta *"
+              type="date"
+              :readonly="!authStore.potEscriureFtth"
+            />
+          </v-col>
+          <v-col v-if="localitzacio.tipus === 'ocasional'" cols="6" sm="4" md="3">
+            <v-text-field
+              v-model="localitzacio.dataBaixa"
+              label="Data de baixa"
+              type="date"
+              :readonly="!authStore.potEscriureFtth"
+            />
+          </v-col>
         </v-row>
       </div>
 
-      <!-- IP i instal·lador -->
-      <div class="bloc-card">
+      <!-- IP i instal·lador (només usuaris autenticats) -->
+      <div v-if="authStore.isAuthenticated" class="bloc-card">
         <div class="bloc-card-title">Connexió i instal·lador</div>
         <v-row dense>
-          <v-col cols="12" sm="8" md="4">
+          <v-col cols="12" sm="4" md="2" class="d-flex align-center">
+            <v-btn v-if="authStore.potEscriureFtth" color="secondary" size="small" @click="detectarIP" :loading="detectantIP" block>
+              Detectar IP
+            </v-btn>
+          </v-col>
+          <v-col cols="12" sm="8" md="2">
             <v-text-field
               v-model="localitzacio.ip"
               label="IP"
@@ -103,12 +124,15 @@
               :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
-          <v-col cols="12" sm="4" md="2" class="d-flex align-center">
-            <v-btn v-if="authStore.potEscriureFtth" color="secondary" size="small" @click="detectarIP" :loading="detectantIP" block>
-              Detectar IP
-            </v-btn>
+          <v-col cols="12" sm="6" md="3">
+            <v-text-field
+              v-model="localitzacio.ont"
+              label="ONT"
+              placeholder="Model / número de sèrie..."
+              :readonly="!authStore.potEscriureFtth"
+            />
           </v-col>
-          <v-col cols="12" md="6">
+          <v-col cols="12" sm="6" md="3">
             <v-text-field
               v-model="localitzacio.telefonFixe"
               label="Telèfon fixe associat"
@@ -116,7 +140,7 @@
               :readonly="!authStore.potEscriureFtth"
             />
           </v-col>
-          <v-col cols="12" md="6">
+          <v-col cols="12"  md="3" offset-md="7">
             <div class="instalador-row">
               <v-btn v-if="authStore.potEscriureFtth" size="small" variant="outlined" @click="obrirDialogInstalador" class="flex-shrink-0" title="Seleccionar instal·lador">
                 <v-icon size="16">mdi-account-hard-hat-outline</v-icon>
@@ -148,8 +172,8 @@
         </v-row>
       </div>
 
-      <!-- Speed Test -->
-      <div class="bloc-card">
+      <!-- Speed Test (només usuaris autenticats) -->
+      <div v-if="authStore.isAuthenticated" class="bloc-card">
         <div class="bloc-card-title">Test de velocitat</div>
         <SpeedTest
           :historial="localitzacio.speedResults || []"
@@ -224,6 +248,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
+import dayjs from 'dayjs'
 import { useRoute, useRouter } from 'vue-router'
 import { useFtthStore } from '@/stores/ftth'
 import SpeedTest from '@/components/ftth/SpeedTest.vue'
@@ -269,7 +294,13 @@ async function carregarDocument(id) {
     }
     const loc = store.getLocalitzacioById(id)
     if (loc) {
-      localitzacio.value = JSON.parse(JSON.stringify(loc))
+      // Normalitzem amb defaults per a documents antics sense aquests camps
+      const dades = { ont: '', dataAlta: null, dataBaixa: '', ...JSON.parse(JSON.stringify(loc)) }
+      // Backfill: altes anteriors sense data d'alta es completen amb la data de creació del document
+      if (dades.tipus === 'ocasional' && !dades.dataAlta) {
+        dades.dataAlta = dayjs(dades.createdAt).format('YYYY-MM-DD')
+      }
+      localitzacio.value = dades
       isNou.value = false
     } else {
       router.push('/ftth')
@@ -291,6 +322,16 @@ watch(() => route.params.id, (newId) => {
 watch(localitzacio, (nouValor, valorAntic) => {
   if (valorAntic !== null && nouValor !== null) markDirty()
 }, { deep: true })
+
+// Autocompleta la data d'alta en passar a tipus 'ocasional' (editable per l'usuari;
+// només s'omple si encara no en té). Document nou → dia d'avui; document existent → data de creació.
+watch(() => localitzacio.value?.tipus, (nou) => {
+  if (nou === 'ocasional' && localitzacio.value && !localitzacio.value.dataAlta) {
+    localitzacio.value.dataAlta = isNou.value
+      ? dayjs().format('YYYY-MM-DD')
+      : dayjs(localitzacio.value.createdAt).format('YYYY-MM-DD')
+  }
+})
 
 // Mostra el snackbar quan el composable de compartir emet un missatge
 const mostrarSnackbarShare = ref(false)
@@ -408,6 +449,10 @@ async function guardar() {
     alert('El nom de la localització és obligatori')
     return
   }
+  if (localitzacio.value.tipus === 'ocasional' && !localitzacio.value.dataAlta) {
+    alert('La data d\'alta és obligatòria per a localitzacions ocasionals')
+    return
+  }
   markClean()
   if (isNou.value) {
     await store.crearLocalitzacio(localitzacio.value)
@@ -434,7 +479,7 @@ async function ferEliminar() {
 <style scoped>
 .page-wrapper {
   padding: 32px 40px;
-  max-width: 1000px;
+  max-width: 1700px;
 }
 
 .page-header {
