@@ -20,14 +20,14 @@ service cloud.firestore {
       return rolActual() == 'admin';
     }
 
-    // Admin i ingeniero: mateixos permisos d'escriptura excepte gestió d'usuaris.
+    // Admin i enginyer: mateixos permisos d'escriptura excepte gestió d'usuaris.
     function potEscriureTot() {
-      return rolActual() == 'admin' || rolActual() == 'ingeniero';
+      return rolActual() == 'admin' || rolActual() == 'enginyer';
     }
 
-    // Tècnic només pot escriure a FTTH; admin i ingeniero també hi poden escriure.
+    // Tècnic només pot escriure a FTTH; admin i enginyer també hi poden escriure.
     function potEscriureFtth() {
-      return potEscriureTot() || rolActual() == 'tecnico';
+      return potEscriureTot() || rolActual() == 'tècnic';
     }
 
     // ── Usuaris ──────────────────────────────────────────────────────────────

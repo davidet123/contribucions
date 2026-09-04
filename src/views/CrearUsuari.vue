@@ -95,13 +95,13 @@ import { ROLS } from '@/stores/auth'
 
 const ROLS_LABEL = {
   [ROLS.ADMIN]: 'Admin',
-  [ROLS.ENGINYER]: 'Ingenier',
+  [ROLS.ENGINYER]: 'Enginyer',
   [ROLS.TECNIC]: 'Tècnic',
 }
 
 const opcionsRol = [
   { value: ROLS.ADMIN, label: 'Admin' },
-  { value: ROLS.ENGINYER, label: 'Ingenier' },
+  { value: ROLS.ENGINYER, label: 'Enginyer' },
   { value: ROLS.TECNIC, label: 'Tècnic' },
 ]
 

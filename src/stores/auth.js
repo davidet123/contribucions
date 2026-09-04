@@ -11,14 +11,14 @@ import { auth, db } from '@/services/firebase'
 
 export const ROLS = {
   ADMIN: 'admin',
-  ENGINYER: 'ingeniero',
-  TECNIC: 'tecnico',
+  ENGINYER: 'enginyer',
+  TECNIC: 'tècnic',
 }
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)       // objecte User de Firebase Auth (o null)
   const nom = ref('')
-  const rol = ref(null)        // 'admin' | 'ingeniero' | 'tecnico' | null
+  const rol = ref(null)        // 'admin' | 'enginyer' | 'tècnic' | null
   const loading = ref(true)    // true fins que Firebase resol l'estat inicial de sessió
   const error = ref(null)
 
@@ -27,7 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
   const esEnginyer = computed(() => rol.value === ROLS.ENGINYER)
   const esTecnic = computed(() => rol.value === ROLS.TECNIC)
 
-  // Pot escriure a totes les seccions excepte FTTH (admin i ingeniero)
+  // Pot escriure a totes les seccions excepte FTTH (admin i enginyer)
   const potEscriureTot = computed(() => esAdmin.value || esEnginyer.value)
   // Pot escriure a FTTH (tots els rols autenticats)
   const potEscriureFtth = computed(() => esAdmin.value || esEnginyer.value || esTecnic.value)

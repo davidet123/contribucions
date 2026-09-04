@@ -39,8 +39,8 @@ const mostrarLogin = ref(false)
 
 const ROLS_LABEL = {
   admin: 'Admin',
-  ingeniero: 'Ingenier',
-  tecnico: 'Tècnic',
+  enginyer: 'Enginyer',
+  tècnic: 'Tècnic',
 }
 
 const nomVisible = computed(() => authStore.nom || authStore.user?.email || 'Usuari')
