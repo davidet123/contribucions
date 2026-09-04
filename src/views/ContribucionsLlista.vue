@@ -22,6 +22,22 @@
         style="max-width: 360px"
         bg-color="white"
       />
+      <v-select
+        v-model="mesSeleccionat"
+        :items="[{ value: null, title: 'Tots els mesos' }, ...mesos.map(m => ({ value: m.value, title: m.label }))]"
+        hide-details
+        density="compact"
+        bg-color="white"
+        style="max-width: 160px"
+      />
+      <v-select
+        v-model="anySeleccionat"
+        :items="[{ value: null, title: 'Tots els anys' }, ...anysDisponibles.map(a => ({ value: a, title: String(a) }))]"
+        hide-details
+        density="compact"
+        bg-color="white"
+        style="max-width: 140px"
+      />
     </div>
 
     <!-- Empty state -->
@@ -118,6 +134,7 @@ import { useContribucionsStore } from '@/stores/contribucions'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
+import { useFiltreMesAny } from '@/composables/useFiltreMesAny'
 
 const router = useRouter()
 const store = useContribucionsStore()
@@ -130,14 +147,20 @@ const cerca = ref('')
 const dialogEliminar = ref(false)
 const aEliminar = ref(null)
 
+const { mesSeleccionat, anySeleccionat, mesos, anysDisponibles, coincideix } =
+  useFiltreMesAny(llistaOrdenada, (c) => c.dataEmissio || c.createdAt)
+
 const llistaFiltrada = computed(() => {
-  if (!cerca.value) return llistaOrdenada.value
-  const q = cerca.value.toLowerCase()
-  return llistaOrdenada.value.filter(c =>
-    c.nomPrograma?.toLowerCase().includes(q) ||
-    c.origenSenyal?.toLowerCase().includes(q) ||
-    c.subtitol?.toLowerCase().includes(q)
-  )
+  let llista = llistaOrdenada.value.filter(c => coincideix(c))
+  if (cerca.value) {
+    const q = cerca.value.toLowerCase()
+    llista = llista.filter(c =>
+      c.nomPrograma?.toLowerCase().includes(q) ||
+      c.origenSenyal?.toLowerCase().includes(q) ||
+      c.subtitol?.toLowerCase().includes(q)
+    )
+  }
+  return llista
 })
 
 // logoId conté directament la URL de Cloudinary
@@ -196,6 +219,10 @@ function fer_eliminar() {
 
 .filter-bar {
   margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .empty-state {

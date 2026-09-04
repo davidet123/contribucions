@@ -27,6 +27,22 @@
         <v-chip value="permanent" filter>Permanent</v-chip>
         <v-chip value="ocasional" filter>Ocasional</v-chip>
       </v-chip-group>
+      <v-select
+        v-model="mesSeleccionat"
+        :items="[{ value: null, title: 'Tots els mesos' }, ...mesos.map(m => ({ value: m.value, title: m.label }))]"
+        hide-details
+        density="compact"
+        bg-color="white"
+        class="filter-mes"
+      />
+      <v-select
+        v-model="anySeleccionat"
+        :items="[{ value: null, title: 'Tots els anys' }, ...anysDisponibles.map(a => ({ value: a, title: String(a) }))]"
+        hide-details
+        density="compact"
+        bg-color="white"
+        class="filter-any"
+      />
     </div>
 
     <!-- Empty state -->
@@ -109,6 +125,7 @@ import { useFtthStore } from '@/stores/ftth'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
+import { useFiltreMesAny } from '@/composables/useFiltreMesAny'
 
 const router = useRouter()
 const store = useFtthStore()
@@ -119,11 +136,15 @@ const { localitzacionsOrdenades, instaladors } = storeToRefs(store)
 const cerca = ref('')
 const filtreTipus = ref(null)
 
+const { mesSeleccionat, anySeleccionat, mesos, anysDisponibles, coincideix } =
+  useFiltreMesAny(localitzacionsOrdenades, (loc) => loc.dataAlta || loc.createdAt)
+
 const llistaFiltrada = computed(() => {
   let llista = localitzacionsOrdenades.value
   if (filtreTipus.value) {
     llista = llista.filter(l => l.tipus === filtreTipus.value)
   }
+  llista = llista.filter(l => coincideix(l))
   if (cerca.value) {
     const q = cerca.value.toLowerCase()
     llista = llista.filter(l =>
@@ -205,6 +226,12 @@ function formatData(iso) {
 }
 
 .filter-chips {
+  flex-shrink: 0;
+}
+
+.filter-mes,
+.filter-any {
+  max-width: 160px;
   flex-shrink: 0;
 }
 
@@ -338,7 +365,9 @@ function formatData(iso) {
     gap: 8px;
   }
 
-  .filter-search {
+  .filter-search,
+  .filter-mes,
+  .filter-any {
     max-width: 100%;
   }
 

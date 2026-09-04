@@ -40,6 +40,22 @@
         bg-color="white"
         class="filter-periode"
       />
+      <v-select
+        v-model="mesSeleccionat"
+        :items="[{ value: null, title: 'Tots els mesos' }, ...mesos.map(m => ({ value: m.value, title: m.label }))]"
+        hide-details
+        density="compact"
+        bg-color="white"
+        class="filter-mes"
+      />
+      <v-select
+        v-model="anySeleccionat"
+        :items="[{ value: null, title: 'Tots els anys' }, ...anysDisponibles.map(a => ({ value: a, title: String(a) }))]"
+        hide-details
+        density="compact"
+        bg-color="white"
+        class="filter-any"
+      />
     </div>
 
     <!-- Empty state -->
@@ -138,6 +154,7 @@ import { useLocalitzacioStore } from '@/stores/localitzacio'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
+import { useFiltreMesAny } from '@/composables/useFiltreMesAny'
 
 const store      = useRetransmissionsStore()
 const storeContr = useContribucionsStore()
@@ -161,17 +178,16 @@ const filtrePeriode = ref('tot')
 const periodes = [
   { value: 'tot',       label: 'Totes les dates' },
   { value: 'properes',  label: 'Pròximes' },
-  { value: 'mes',       label: 'Aquest mes' },
-  { value: 'any',       label: 'Aquest any' },
   { value: 'passades',  label: 'Passades' },
 ]
+
+const { mesSeleccionat, anySeleccionat, mesos, anysDisponibles, coincideix } =
+  useFiltreMesAny(llistaOrdenada, (r) => r.data || r.createdAt)
 
 const filtraPassades = computed(() => filtrePeriode.value === 'passades')
 
 const llistaFiltrada = computed(() => {
   const ara = new Date()
-  const iniciMes = new Date(ara.getFullYear(), ara.getMonth(), 1)
-  const iniciAny = new Date(ara.getFullYear(), 0, 1)
 
   return llistaOrdenada.value.filter(r => {
     // Filtre text
@@ -181,15 +197,15 @@ const llistaFiltrada = computed(() => {
     }
     // Filtre estat
     if (filtreEstat.value && r.estat !== filtreEstat.value) return false
-    // Filtre període
+    // Filtre període relatiu (pròximes/passades)
     if (filtrePeriode.value !== 'tot') {
       const d = r.data ? new Date(r.data + 'T00:00') : null
       if (!d) return filtrePeriode.value === 'tot'
       if (filtrePeriode.value === 'properes' && d < ara) return false
-      if (filtrePeriode.value === 'mes' && (d < iniciMes || d > new Date(ara.getFullYear(), ara.getMonth() + 1, 0))) return false
-      if (filtrePeriode.value === 'any' && (d < iniciAny || d.getFullYear() !== ara.getFullYear())) return false
       if (filtrePeriode.value === 'passades' && d >= ara) return false
     }
+    // Filtre mes/any absolut
+    if (!coincideix(r)) return false
     return true
   })
 })
@@ -267,6 +283,8 @@ async function ferEliminar() {
 .filter-search { flex: 2; min-width: 180px; }
 .filter-estat  { flex: 1; min-width: 140px; }
 .filter-periode { flex: 1; min-width: 140px; }
+.filter-mes    { flex: 1; min-width: 120px; }
+.filter-any    { flex: 1; min-width: 100px; }
 
 .empty-state {
   display: flex;
@@ -369,7 +387,7 @@ async function ferEliminar() {
   .page-wrapper { padding: 20px 16px; }
   .page-title   { font-size: 20px; }
   .filter-bar   { flex-direction: column; gap: 8px; }
-  .filter-search, .filter-estat, .filter-periode { flex: none; width: 100%; }
+  .filter-search, .filter-estat, .filter-periode, .filter-mes, .filter-any { flex: none; width: 100%; }
   .r-card-data  { display: none; }
 }
 </style>

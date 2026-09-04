@@ -25,6 +25,22 @@
         class="filter-search"
         bg-color="white"
       />
+      <v-select
+        v-model="mesSeleccionat"
+        :items="[{ value: null, title: 'Tots els mesos' }, ...mesos.map(m => ({ value: m.value, title: m.label }))]"
+        hide-details
+        density="compact"
+        bg-color="white"
+        class="filter-mes"
+      />
+      <v-select
+        v-model="anySeleccionat"
+        :items="[{ value: null, title: 'Tots els anys' }, ...anysDisponibles.map(a => ({ value: a, title: String(a) }))]"
+        hide-details
+        density="compact"
+        bg-color="white"
+        class="filter-any"
+      />
     </div>
 
     <!-- Empty state -->
@@ -122,6 +138,7 @@ import { useLocalitzacioStore } from '@/stores/localitzacio'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
+import { useFiltreMesAny } from '@/composables/useFiltreMesAny'
 
 const store = useLocalitzacioStore()
 const authStore = useAuthStore()
@@ -130,8 +147,11 @@ const { localitzacionsOrdenades } = storeToRefs(store)
 
 const cerca = ref('')
 
+const { mesSeleccionat, anySeleccionat, mesos, anysDisponibles, coincideix } =
+  useFiltreMesAny(localitzacionsOrdenades, (l) => l.createdAt)
+
 const llistaFiltrada = computed(() => {
-  let llista = localitzacionsOrdenades.value
+  let llista = localitzacionsOrdenades.value.filter(l => coincideix(l))
   if (cerca.value) {
     const q = cerca.value.toLowerCase()
     llista = llista.filter(l =>
@@ -203,6 +223,12 @@ function formatData(iso) {
   max-width: 360px;
   flex: 1;
   min-width: 160px;
+}
+
+.filter-mes,
+.filter-any {
+  max-width: 160px;
+  flex-shrink: 0;
 }
 
 .empty-state {
@@ -340,7 +366,9 @@ function formatData(iso) {
     gap: 8px;
   }
 
-  .filter-search {
+  .filter-search,
+  .filter-mes,
+  .filter-any {
     max-width: 100%;
   }
 
